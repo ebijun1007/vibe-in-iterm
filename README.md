@@ -1,6 +1,6 @@
-# iTerm 3-Pane Auto Layout with direnv + Spec Kit
+# iTerm 3-Pane Auto Layout with direnv
 
-This repository automatically sets up an **iTerm2 three-pane layout** when you `cd` into the directory, using [`direnv`](https://direnv.net/), AppleScript, and [Spec Kit](https://github.com/github/spec-kit).
+This repository automatically sets up an **iTerm2 three-pane layout** when you `cd` into the directory, using [`direnv`](https://direnv.net/) and AppleScript.
 
 - **Top left:** runs `codex`
 - **Top right:** runs `claude`
@@ -34,20 +34,6 @@ direnv allow
 
 ---
 
-### 2. Initialize Spec Kit (required)
-
-This project assumes you are using [Spec Kit](https://github.com/github/spec-kit) for custom prompt and specification management.
-
-Run this command once in the project root:
-
-```bash
-uvx --from git+https://github.com/github/spec-kit.git specify init --here
-```
-
-This will initialize Spec Kit and prepare the environment for local prompt definitions.
-
----
-
 ## 🧠 How It Works
 
 1. `direnv` monitors `.envrc`
@@ -72,9 +58,7 @@ Infinite recursion is avoided via the `ITERM_LAYOUT_DONE=1` flag.
 ├── .envrc
 ├── scripts/
 │   └── iterm-3pane.scpt
-├── setup.sh
-└── spec/
-    └── (created by Spec Kit)
+└── setup.sh
 ```
 
 ---
@@ -105,5 +89,4 @@ This is a safeguard to prevent unexpected execution on clone.
 **Requirements:**
 - macOS with iTerm2
 - [`direnv`](https://direnv.net/)
-- [Spec Kit](https://github.com/github/spec-kit)
 - (Optional) Homebrew for automatic installation

@@ -1,33 +1,3 @@
-#!/usr/bin/env bash
-set -e
-
-# 1. Install direnv if missing (Homebrew assumed)
-if ! command -v direnv >/dev/null 2>&1; then
-  echo "[info] direnv not found. installing..."
-  brew install direnv
-  echo 'eval "$(direnv hook zsh)"' >> ~/.zshrc
-  echo 'eval "$(direnv hook bash)"' >> ~/.bashrc 2>/dev/null || true
-fi
-
-# 2. Create scripts directory
-mkdir -p scripts
-
-# 3. Write .envrc
-cat > .envrc <<'EOF'
-
-# Prevent infinite layout calls in spawned panes
-if [ -n "$ITERM_LAYOUT_DONE" ]; then
-  return
-fi
-
-# Only run on iTerm
-if [ "$TERM_PROGRAM" = "iTerm.app" ]; then
-  osascript ./scripts/iterm-3pane.scpt "$PWD"
-fi
-EOF
-
-# 4. Write AppleScript for iTerm (keep existing tabs, open a new tab with 4 panes)
-cat > scripts/iterm-3pane.scpt <<'EOF'
 on run argv
   set workdir to item 1 of argv
 
@@ -80,7 +50,3 @@ on run argv
     end tell
   end tell
 end run
-EOF
-
-echo "[done] Created .envrc and scripts/iterm-3pane.scpt"
-echo "Run this once in the repo:  direnv allow"
