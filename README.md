@@ -25,7 +25,7 @@ bash setup.sh
 This will:
 - Install the `vc` command to `~/bin`
 - Add `~/bin` to your `PATH` if needed
-- Create `AGENTS.md` and `CLAUDE.md` symlink
+- Put everything in place so the `vc` command can bootstrap the workspace Markdown files on demand
 
 ### 2. Reload your shell configuration
 
@@ -45,6 +45,8 @@ vc
 
 iTerm will create a new tab with 4 panes as described above.
 
+The `vc` command creates `AGENTS.md`, `CLAUDE.md`, and `todo.md` only when they are missing before launching the layout. Existing files (including any local symlink choices) remain untouched so your notes are never overwritten.
+
 ---
 
 ## 🧠 How It Works
@@ -52,6 +54,7 @@ iTerm will create a new tab with 4 panes as described above.
 1. The `vc` command is a shell script installed in `~/bin`
 2. When executed, it:
    - Detects the current working directory
+   - Ensures `AGENTS.md`, `CLAUDE.md`, and `todo.md` exist (creating only missing files)
    - Runs AppleScript to create a new iTerm tab with 4 panes
    - Sets up each pane with the appropriate command
 
@@ -65,7 +68,8 @@ iTerm will create a new tab with 4 panes as described above.
 │   └── vc            # The vc command script
 ├── setup.sh          # Setup script
 ├── AGENTS.md         # Agent configuration
-└── CLAUDE.md         # Symlink to AGENTS.md
+├── CLAUDE.md         # Claude-specific notes
+└── todo.md           # Shared task list surfaced in iTerm
 ```
 
 ---

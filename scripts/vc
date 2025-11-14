@@ -10,6 +10,21 @@ fi
 # Get current working directory
 WORKDIR="$PWD"
 
+# Pre-flight: ensure markdown files exist (only create if missing)
+created_files=()
+for file in AGENTS.md CLAUDE.md todo.md; do
+  if [ ! -e "$file" ]; then
+    touch "$file"
+    created_files+=("$file")
+  fi
+done
+
+if [ ${#created_files[@]} -gt 0 ]; then
+  echo "[info] Created ${created_files[*]}"
+else
+  echo "[info] Markdown files already present"
+fi
+
 # Run AppleScript to create iTerm layout
 osascript <<EOF
 on run

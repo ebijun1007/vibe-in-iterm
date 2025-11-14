@@ -1,12 +1,23 @@
 #!/usr/bin/env bash
 set -e
 
+# Helper function to ensure markdown files exist as real files (not symlinks)
+ensure_markdown_file() {
+  local file="$1"
+  if [ -L "$file" ]; then
+    rm "$file"
+  fi
+  touch "$file"
+}
+
 # 1. Create scripts directory
 mkdir -p scripts
 
-# 2. Create AGENTS.md and symbolic link
-touch AGENTS.md
-ln -sf AGENTS.md CLAUDE.md
+# 2. Create markdown files
+ensure_markdown_file "AGENTS.md"
+ensure_markdown_file "CLAUDE.md"
+ensure_markdown_file "todo.md"
+echo "[info] Ensured AGENTS.md, CLAUDE.md, and todo.md exist"
 
 # 3. Install vc command to ~/bin
 mkdir -p ~/bin
