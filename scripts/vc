@@ -217,7 +217,7 @@ on run
 
     -- left pane: watch todo.md (create if not exists)
     tell leftPane
-      write text "cd " & workdir & "; [ ! -f todo.md ] && touch todo.md; while true; do clear; cat todo.md; sleep 1; done"
+      write text "cd " & workdir & "; [ ! -f todo.md ] && touch todo.md; command -v fswatch >/dev/null 2>&1 || brew install fswatch; fswatch -o todo.md | while read; do clear; cat todo.md; done"
     end tell
 
     -- top-right: run codex
