@@ -35,6 +35,9 @@
     }
   },
   "instructions": [
-    "OPENCODE.md"
+    ".opencode/OPENCODE.md",
+    ".design/architecture.md",
+    ".design/guidelines.md",
+    ".design/decisions.md"
   ]
 }

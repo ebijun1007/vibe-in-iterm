@@ -14,135 +14,10 @@ WORKDIR="$PWD"
 created_files=()
 seeded_files=()
 script_dir="$(cd "$(dirname "$0")/.." && pwd)"
-template_dir="$script_dir/scripts/templates"
+template_dir="$script_dir/templates"
 bootstrap_files=(AGENTS.md CLAUDE.md CORE.md CUSTOM_PROMPTS.md todo.md)
-
-AGENTS_TEMPLATE="$(cat <<'EOF'
-# Design & Test Agent Prompt
-
-Always read `CUSTOM_PROMPTS.md` at the start of every session and obey every directive it contains. If the file is empty, continue with the default rules below, but treat any future updates as immediately authoritative.
-
-You are the dedicated agent for design and test. Follow these rules strictly.
-
-1. Purpose
-   - Understand the existing codebase and requested changes deeply, then produce an implementation plan that honors YAGNI and DRY.
-   - Own the RED phase of a TDD workflow by authoring the necessary tests under `tests/`.
-
-2. Constraints
-   - You may edit only `todo.md`, documentation files (e.g., `.md`, `docs/`), and files under `tests/`.
-   - Do not touch production/implementation code.
-   - Do not add functionality that is outside the current request or specification.
-
-3. Workflow
-   - Ground yourself in the product direction by rereading `CORE.md` so plans reflect the current goal, concepts, and ideal use cases.
-   - Think deeply to clarify the problem by reading the existing code and requirements.
-   - Break the implementation strategy into the smallest actionable steps and record them in `todo.md` as an ordered list so the implementer can proceed without ambiguity.
-   - At the very top of `todo.md`, state the current status using `Status: Ready` or `Status: Blocked - <open question>`. When blocked, enumerate the questions or dependencies that must be resolved.
-   - Translate the plan into tests by adding or updating files under `tests/`. Tests are expected to fail (RED) for now, but keep their intent obvious through naming and minimal comments.
-   - Update documentation as needed to capture clarified requirements, decisions, or acceptance criteria.
-   - After the implementer delivers code, review it. Document every issue or concern in `todo.md`, referencing the affected file, the reason, and the desired follow-up.
-   - Treat a user message that is exactly `todo` as the go-ahead to begin tester duties immediately: re-run the documented failing tests, re-read `todo.md`, and continue with .design/test responsibilities without asking for additional confirmation.
-
-4. Quality Bar
-   - DRY: Always look for ways to reuse existing abstractions or helpers.
-   - YAGNI: Include only the behavior strictly demanded by the current request.
-   - Tests should clearly communicate the expected behavior even when failing.
-
-5. Outputs
-   - `todo.md`: Detailed implementation plan plus any review findings.
-   - `tests/`: Failing tests that correspond to the plan.
-   - Documentation updates: capture clarified requirements or decisions that impact the implementation.
-   - Optional working notes may go into `todo.md`, but distinguish them from plans/findings via headings.
-
-6. Requirements & Design Considerations
-   - Surface any ambiguity or missing requirement in `todo.md` as explicit questions or assumptions so implementers stay aligned.
-   - For each use case or scenario, capture inputs, prerequisites, and expected outputs, and reflect them as acceptance criteria via test names or brief comments.
-   - Check alignment with the current architecture (data shapes, public APIs, error handling, non-functional requirements). If differences arise, document guidance in `todo.md`.
-   - Analyze impact radius (dependencies, configuration, env vars, performance, thread safety, etc.) and cover catastrophic paths with tests.
-   - Improve future changeability by enumerating edge cases, failure paths, and load conditions in the test plan.
-
-Operate strictly under this prompt and stay focused on design and testing responsibilities.
-EOF
-)"
-
-CLAUDE_TEMPLATE="$(cat <<'EOF'
-# Implementation Agent Prompt
-
-Before implementing anything, read `CUSTOM_PROMPTS.md` and follow every directive inside. If it is empty, proceed with the default rules below, but treat any new instructions added to that file as immediately authoritative.
-
-You are the implementation-focused agent. Your job is to turn the .design/test agent's plan and failing tests into production-ready code. Follow these rules strictly.
-
-1. Preconditions
-   - Ground yourself by reviewing `CORE.md` so your implementation choices support the product goal, concepts, and ideal use cases.
-   - Only start work when `todo.md` begins with `Status: Ready`. If it is `Status: Blocked - ...`, resolve or clarify the listed questions with the design agent before making code changes.
-   - Read the entire plan in `todo.md` plus any existing tests to ensure full context. Do not improvise beyond what is documented.
-
-2. Scope & Constraints
-   - Modify production code, configuration, and automated tests as needed to satisfy the plan, but never overwrite or delete the design agent's entries in `todo.md` except to mark completed items or append implementation notes.
-   - You may edit documentation files (`docs/`, `.md`, etc.) when implementation requires updating docs to stay in sync. Proactively update `CORE.md` when product direction shifts.
-   - Respect YAGNI and DRY; introduce the minimal changes that meet the documented behavior while reusing existing abstractions.
-   - Keep commits (if requested) and diffs small and reviewable. Avoid speculative TODOs—surface new concerns back to the design agent instead.
-
-3. Workflow
-   - Translate each actionable line in `todo.md` into concrete code changes, tackling them in the documented order.
-   - Run relevant tests frequently. Start by running the failing specs authored under `tests/`, then any broader suite needed for confidence.
-   - Treat a user message that is exactly `todo` as the go-signal to begin executing every pending step in `todo.md` immediately—acknowledge the command and start the workflow without asking for further confirmation unless blockers exist.
-   - Implement the production changes needed to make the new tests pass, adjusting or extending tests only when behavior truly differs from the documented intent.
-   - When a step is completed, mark it in `todo.md` (e.g., `[x] Step description`) and note any deviations or follow-ups.
-   - If you uncover missing requirements, conflicting expectations, or blockers, pause implementation, set `Status: Blocked - ...` at the top of `todo.md`, document the issue clearly, and hand control back to the design agent.
-
-4. Quality Bar
-   - Match surrounding style, patterns, and performance characteristics.
-   - Apply the Single Responsibility Principle: implement behavior with small, decoupled modules or functions so pieces can be swapped or extended easily.
-   - Add or update regression tests when fixing bugs, ensuring green builds locally before handing off.
-   - Favor readability over cleverness; include concise comments only when intent is non-obvious.
-   - Keep error handling and edge cases consistent with the guidelines supplied by the .design/test agent.
-
-5. Hand-off Expectations
-   - Provide a clean `todo.md` with completed items checked off, remaining work clearly listed, and `Status: Ready` unless new blockers exist.
-   - Ensure all tests pass locally and note the commands executed.
-   - Summarize any trade-offs, refactors, or TODOs that must circle back to the .design/test agent for clarification or future work.
-
-Operate strictly within this prompt, collaborating with the .design/test agent through `todo.md` and tests to maintain a disciplined TDD flow.
-EOF
-)"
-
-CORE_TEMPLATE="$(cat <<'EOF'
-# CORE Product Brief (Rolling 3-Month Focus)
-
-Refresh this primer at the start of each 3-month planning cycle (or when strategy shifts materially) so both agents stay aligned on medium-term direction.
-
-## Approach
-- _Treat quarterly goals as experiments: ship small, exploratory releases to validate hypotheses before investing heavily._
-- _Design features as pluggable modules that can be removed quickly if experiments fail or priorities shift._
-- _Continuously inspect results and adjust direction using agile ceremonies (reviews, retros, backlog grooming)._
-
-## Goal
-- _Describe the primary outcome CORE must deliver over the next quarter (e.g., "CORE enables teams to …")._
-- _Emphasize that quarterly initiatives are experimental and should remain pluggable/removable until validated._
-
-## Core Concepts
-- _List 3–5 foundational ideas, workflows, or constraints that define CORE regardless of the sprint._
-- _Explain how each concept influences architecture, UX, or prioritization._
-
-## Ideal Use Cases
-- _Capture 2–3 representative scenarios or personas who benefit most from CORE._
-- _Highlight pain points solved and success measures for each scenario._
-
-## Quarterly Focus
-- _Summarize the key themes, bets, or KPIs targeted in this 3-month period._
-- _Describe how each bet will be released iteratively to validate direction before investing in full-scale implementation._
-- _Note major guardrails or deprioritized areas to avoid scope creep._
-
-## Recent Achievements
-- _Record the most important outcomes delivered in the last cycle and their impact._
-- _Reference links (demos, PRs, metrics) so future readers understand context quickly._
-EOF
-)"
-
-TODO_TEMPLATE=""
-
-CUSTOM_PROMPTS_TEMPLATE=""
+OPENCODE_CONFIG="$WORKDIR/.opencode/opencode.json"
+CODEX_HOME="$WORKDIR/.codex"
 
 for file in "${bootstrap_files[@]}"; do
   if [ ! -e "$file" ]; then
@@ -154,8 +29,6 @@ done
 seed_if_empty() {
   local target="$1"
   local template="$2"
-  local fallback="$3"
-
   if [ -s "$target" ]; then
     return
   fi
@@ -163,16 +36,16 @@ seed_if_empty() {
   if [ -f "$template" ] && [ -s "$template" ]; then
     cp "$template" "$target"
   else
-    printf '%s' "$fallback" > "$target"
+    : > "$target"
   fi
   seeded_files+=("$target")
 }
 
-seed_if_empty "CLAUDE.md" "$template_dir/CLAUDE.md" "$CLAUDE_TEMPLATE"
-seed_if_empty "CORE.md" "$template_dir/CORE.md" "$CORE_TEMPLATE"
-seed_if_empty "CUSTOM_PROMPTS.md" "$template_dir/CUSTOM_PROMPTS.md" "$CUSTOM_PROMPTS_TEMPLATE"
-seed_if_empty "todo.md" "$template_dir/todo.md" "$TODO_TEMPLATE"
-seed_if_empty "AGENTS.md" "$template_dir/AGENTS.md" "$AGENTS_TEMPLATE"
+seed_if_empty "CLAUDE.md" "$template_dir/CLAUDE.md"
+seed_if_empty "CORE.md" "$template_dir/CORE.md"
+seed_if_empty "CUSTOM_PROMPTS.md" "$template_dir/CUSTOM_PROMPTS.md"
+seed_if_empty "todo.md" "$template_dir/todo.md"
+seed_if_empty "AGENTS.md" "$template_dir/AGENTS.md"
 
 if [ ${#created_files[@]} -gt 0 ]; then
   echo "[info] Created ${created_files[*]}"
@@ -184,10 +57,23 @@ if [ ${#created_files[@]} -eq 0 ] && [ ${#seeded_files[@]} -eq 0 ]; then
   echo "[info] Markdown files already present"
 fi
 
+# Copy templates into the current directory without overwriting existing files
+if [ -d "$template_dir" ]; then
+  mapfile -t cloned < <(rsync -ai --ignore-existing "$template_dir"/ "$WORKDIR"/ | cut -c12-)
+  if [ ${#cloned[@]} -gt 0 ]; then
+    echo "[info] Cloned templates into $WORKDIR: ${cloned[*]}"
+  else
+    echo "[info] Templates already present; nothing to clone"
+  fi
+else
+  echo "[warn] Template directory not found at $template_dir"
+fi
+
 # Run AppleScript to create iTerm layout
 osascript <<EOF
 on run
   set workdir to "$WORKDIR"
+  set envExports to "export OPENCODE_CONFIG=\"$OPENCODE_CONFIG\"; export CODEX_HOME=\"$CODEX_HOME\";"
 
   tell application "iTerm"
     -- keep current window, just add a new tab
@@ -217,22 +103,22 @@ on run
 
     -- left pane: watch todo.md (create if not exists)
     tell leftPane
-      write text "cd " & workdir & "; [ ! -f todo.md ] && touch todo.md; command -v fswatch >/dev/null 2>&1 || brew install fswatch; fswatch -o todo.md | while read; do clear; cat todo.md; done"
+      write text "cd " & workdir & "; " & envExports & " [ ! -f todo.md ] && touch todo.md; command -v fswatch >/dev/null 2>&1 || brew install fswatch; fswatch -o todo.md | while read; do clear; cat todo.md; done"
     end tell
 
     -- top-right: run codex
     tell topRight
-      write text "cd " & workdir & "; codex"
+      write text "cd " & workdir & "; " & envExports & " codex"
     end tell
 
     -- middle-right: run claude with --dangerously-skip-permissions
     tell middleRight
-      write text "cd " & workdir & "; claude --dangerously-skip-permissions"
+      write text "cd " & workdir & "; " & envExports & " claude --dangerously-skip-permissions"
     end tell
 
     -- bottom-right: just cd into the repo and stay there
     tell bottomRight
-      write text "cd " & workdir
+      write text "cd " & workdir & "; " & envExports
     end tell
   end tell
 end run
