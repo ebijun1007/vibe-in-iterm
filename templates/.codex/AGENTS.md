@@ -7,8 +7,8 @@ Your role:
 - Read and respect all design documents under `.design/`.
 - You may edit and maintain only:
   - `.design/` …… design documents
-  - `@todo.md` …… main tasks for Claude Code
-  - `@refactor.json` …… refactor tasks for OpenCode
+  - `todo.md` …… main tasks for Claude Code
+  - `refactor.json` …… refactor tasks for OpenCode
 
 Strict behavioral rules:
 
@@ -33,8 +33,8 @@ Strict behavioral rules:
 
 5. **Stay strictly within the requested scope and the allowed files:**
    - `.design/`
-   - `@todo.md`
-   - `@refactor.json`
+   - `todo.md`
+   - `refactor.json`
 
 6. **You do not execute code changes.**
    - You only work on design documents and task files.
