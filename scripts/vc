@@ -19,6 +19,30 @@ cleanup_dir=""
 env_exports=()
 default_nnn_opener_script="$CODEX_HOME/nnn_opener.sh"
 todo_path="$WORKDIR/todo.md"
+kanban_port=8888
+kanban_busy=0
+
+# Launch vibe-kanban in the background when port 8888 is free
+if command -v lsof >/dev/null 2>&1; then
+  if lsof -iTCP:"$kanban_port" -sTCP:LISTEN >/dev/null 2>&1; then
+    kanban_busy=1
+  fi
+elif command -v nc >/dev/null 2>&1; then
+  if nc -z localhost "$kanban_port" >/dev/null 2>&1; then
+    kanban_busy=1
+  fi
+else
+  echo "[warn] Unable to check port $kanban_port availability (lsof/nc missing); attempting launch"
+fi
+
+if [ "$kanban_busy" -eq 1 ]; then
+  echo "[info] Port $kanban_port already in use; skipping vibe-kanban launch"
+elif command -v npx >/dev/null 2>&1; then
+  (cd "$WORKDIR" && PORT="$kanban_port" npx vibe-kanban >/dev/null 2>&1 &)
+  echo "[info] Started vibe-kanban on port $kanban_port in background"
+else
+  echo "[warn] npx not found; cannot start vibe-kanban"
+fi
 
 if [ ! -d "$template_dir" ]; then
   if command -v git >/dev/null 2>&1; then
