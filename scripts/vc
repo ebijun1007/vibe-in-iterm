@@ -1,47 +1,132 @@
 #!/usr/bin/env bash
 set -e
 
-# Check if running in iTerm
-if [ "$TERM_PROGRAM" != "iTerm.app" ]; then
-  echo "[error] This command only works in iTerm.app"
-  exit 1
-fi
-
 # Get current working directory
 WORKDIR="$PWD"
 
 script_dir="$(cd "$(dirname "$0")" && pwd)"
-OPENCODE_CONFIG="$WORKDIR/.opencode/opencode.json"
-CODEX_HOME="$WORKDIR/.codex"
 repo_url="https://github.com/ebijun1007/vibe-in-iterm.git"
 template_dir="$script_dir/templates"
 cleanup_dir=""
-env_exports=()
-default_nnn_opener_script="$CODEX_HOME/nnn_opener.sh"
 todo_path="$WORKDIR/todo.md"
-kanban_port=8888
-kanban_busy=0
+data_dir="$HOME/Library/Application Support/ai/bloop/vibe-kanban"
+kanban_running=0
+kanban_pid=""
+ollama_port=11434
+ollama_busy=0
 
-# Launch vibe-kanban in the background when port 8888 is free
-if command -v lsof >/dev/null 2>&1; then
-  if lsof -iTCP:"$kanban_port" -sTCP:LISTEN >/dev/null 2>&1; then
-    kanban_busy=1
+print_vibe_port() {
+  local pid_list=("$@")
+  if ! command -v lsof >/dev/null 2>&1; then
+    return 1
   fi
-elif command -v nc >/dev/null 2>&1; then
-  if nc -z localhost "$kanban_port" >/dev/null 2>&1; then
-    kanban_busy=1
+
+  # Build PID candidates: supplied list (if any) plus all vibe-kanban matches
+  local candidate_pids=()
+  if [ "${#pid_list[@]}" -gt 0 ]; then
+    candidate_pids+=("${pid_list[@]}")
   fi
+  while read -r pid; do
+    candidate_pids+=("$pid")
+  done < <(pgrep -f "vibe-kanban" 2>/dev/null || true)
+
+  # Deduplicate
+  local uniq_pids=()
+  local seen=""
+  for pid in "${candidate_pids[@]}"; do
+    [ -z "$pid" ] && continue
+    if [[ ",$seen," != *",$pid,"* ]]; then
+      uniq_pids+=("$pid")
+      seen+="${seen:+,}$pid"
+    fi
+  done
+
+  local port_line=""
+  for pid in "${uniq_pids[@]}"; do
+    port_line=$(lsof -Pan -p "$pid" -iTCP -sTCP:LISTEN 2>/dev/null | awk 'NR>1{print $9; exit}')
+    if [ -n "$port_line" ]; then
+      break
+    fi
+  done
+
+  # Final fallback: scan all listening sockets and inspect process args for vibe-kanban
+  if [ -z "$port_line" ]; then
+    while read -r pid port_field; do
+      if ps -p "$pid" -o args= 2>/dev/null | grep -qi "vibe[- ]*kanban"; then
+        port_line="$port_field"
+        break
+      fi
+    done < <(lsof -nP -iTCP -sTCP:LISTEN 2>/dev/null | awk 'NR>1{print $2 " " $9}')
+  fi
+
+  if [ -z "$port_line" ]; then
+    return 1
+  fi
+
+  local port=${port_line##*:}
+  port=${port%%[^0-9]*}
+  if [ -z "$port" ]; then
+    return 1
+  fi
+
+  local ts
+  ts=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+  echo "$ts  INFO vibe-kanban: Server running on http://127.0.0.1:$port"
+}
+
+mkdir -p "$data_dir"
+if [ -f "$WORKDIR/profiles.json" ]; then
+  cp "$WORKDIR/profiles.json" "$data_dir/profiles.json"
+  echo "[info] Copied profiles.json to $data_dir"
 else
-  echo "[warn] Unable to check port $kanban_port availability (lsof/nc missing); attempting launch"
+  echo "[warn] profiles.json not found in repo root; skipping copy"
 fi
 
-if [ "$kanban_busy" -eq 1 ]; then
-  echo "[info] Port $kanban_port already in use; skipping vibe-kanban launch"
+# Launch vibe-kanban in the background on its default port if not already running
+if pgrep -f "vibe-kanban" >/dev/null 2>&1; then
+  kanban_running=1
+  kanban_pid=$(pgrep -f "vibe-kanban" | head -n1)
+fi
+
+if [ "$kanban_running" -eq 1 ]; then
+  if ! print_vibe_port "$kanban_pid"; then
+    echo "[info] vibe-kanban already running; leaving it as-is"
+  fi
 elif command -v npx >/dev/null 2>&1; then
-  (cd "$WORKDIR" && PORT="$kanban_port" npx vibe-kanban >/dev/null 2>&1 &)
-  echo "[info] Started vibe-kanban on port $kanban_port in background"
+  (cd "$WORKDIR" && npx vibe-kanban >/dev/null 2>&1 &)
+  kanban_pid=$!
+  sleep 1
+  if ! print_vibe_port "$kanban_pid"; then
+    echo "[info] Started vibe-kanban in background (pid $kanban_pid)"
+  else
+    :
+  fi
 else
   echo "[warn] npx not found; cannot start vibe-kanban"
+fi
+
+# Launch ollama serve in the background when port 11434 is free
+if command -v lsof >/dev/null 2>&1; then
+  if lsof -iTCP:"$ollama_port" -sTCP:LISTEN >/dev/null 2>&1; then
+    ollama_busy=1
+  fi
+elif command -v nc >/dev/null 2>&1; then
+  if nc -z localhost "$ollama_port" >/dev/null 2>&1; then
+    ollama_busy=1
+  fi
+else
+  echo "[warn] Unable to check port $ollama_port availability (lsof/nc missing); attempting launch"
+fi
+
+if command -v ollama >/dev/null 2>&1; then
+  if [ "$ollama_busy" -eq 1 ]; then
+    echo "[info] Port $ollama_port already in use; skipping ollama serve launch"
+  else
+    (OLLAMA_HOST="${OLLAMA_HOST:-}" ollama serve >/dev/null 2>&1 &)
+    echo "[info] Started ollama serve in background on port $ollama_port"
+  fi
+else
+  echo "[warn] ollama not found; cannot start ollama serve"
 fi
 
 if [ ! -d "$template_dir" ]; then
@@ -92,92 +177,4 @@ else
   echo "[warn] code command not found; skipping opening todo.md"
 fi
 
-# Build shared environment exports for the iTerm panes
-env_exports+=("OPENCODE_CONFIG=$OPENCODE_CONFIG")
-env_exports+=("CODEX_HOME=$CODEX_HOME")
-
-nnn_opener="${VC_NNN_OPENER:-${NNN_OPENER:-}}"
-nnn_opener_source=""
-nnn_opts="${NNN_OPTS:-}"
-if [ -n "$nnn_opener" ]; then
-  nnn_opener_source="ENV"
-elif command -v bat >/dev/null 2>&1; then
-  mkdir -p "$CODEX_HOME"
-  cat > "$default_nnn_opener_script" <<'EOF'
-#!/usr/bin/env bash
-set -e
-
-target="$1"
-if [ -z "$target" ]; then
-  exit 0
-fi
-
-if command -v bat >/dev/null 2>&1; then
-  bat --style=numbers --color=always --paging=always --pager="less -R" "$target"
-else
-  "${EDITOR:-vi}" "$target"
-fi
-EOF
-  chmod +x "$default_nnn_opener_script"
-  nnn_opener="$default_nnn_opener_script"
-  nnn_opener_source="bat-wrapper"
-fi
-
-if [ -n "$nnn_opener" ]; then
-  env_exports+=("NNN_OPENER=$nnn_opener")
-  if [ "$nnn_opener_source" = "ENV" ]; then
-    echo "[info] NNN_OPENER propagated from environment: $nnn_opener"
-  else
-    echo "[info] NNN_OPENER set for nnn to use bat: $nnn_opener"
-  fi
-fi
-if [ -z "$nnn_opts" ]; then
-  env_exports+=("NNN_OPTS=c")
-  echo "[info] NNN_OPTS defaulted to 'c' for CLI opener"
-else
-  env_exports+=("NNN_OPTS=$nnn_opts")
-fi
-
-env_prefix=""
-for entry in "${env_exports[@]}"; do
-  key=${entry%%=*}
-  val=${entry#*=}
-  env_prefix+="export $key=$(printf '%q' "$val"); "
-done
-
-# Run AppleScript to create iTerm layout
-ENV_PREFIX="$env_prefix" osascript <<EOF
-on run
-  set workdir to "$WORKDIR"
-  set envPrefix to (system attribute "ENV_PREFIX")
-
-  tell application "iTerm"
-    -- keep current window, just add a new tab
-    set theWindow to current window
-    tell theWindow
-      create tab with default profile
-      set theTab to current tab
-    end tell
-
-    -- first session in the new tab
-    tell current session of theTab
-      -- split into left and right
-      set leftPane to it
-      set rightPane to (split vertically with default profile)
-    end tell
-
-    -- left pane: run codex in the repo
-    tell leftPane
-      write text "cd " & workdir & "; if command -v codex >/dev/null 2>&1; then " & envPrefix & " codex; else echo \"[warn] codex not found in PATH\"; fi"
-    end tell
-
-    -- right pane: run claude code (dangerously skip permissions)
-    tell rightPane
-      write text "cd " & workdir & "; if command -v claude >/dev/null 2>&1; then " & envPrefix & " claude code --dangerously-skip-permissions; else echo \"[warn] claude not found in PATH\"; fi"
-    end tell
-
-  end tell
-end run
-EOF
-
-echo "[done] iTerm layout created for: $WORKDIR"
+echo "[done] Workspace prepared for: $WORKDIR"

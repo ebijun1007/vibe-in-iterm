@@ -39,23 +39,13 @@ if [ -n "$SHELL_RC" ]; then
     echo 'export PATH="$HOME/bin:$PATH"' >> "$SHELL_RC"
     echo "[info] Please run: source $SHELL_RC"
   else
-    echo "[info] PATH already configured in $SHELL_RC"
+echo "[info] PATH already configured in $SHELL_RC"
   fi
 fi
-
-echo "[info] Checking required tools (nnn, bat)..."
-for pkg in nnn bat; do
-  if command -v "$pkg" >/dev/null 2>&1; then
-    echo "[info] $pkg already installed"
-  else
-    echo "[info] Installing $pkg via Homebrew..."
-    brew install "$pkg"
-  fi
-done
 
 echo "[done] Setup complete!"
 echo ""
 echo "Usage:"
 echo "  1. Navigate to any directory where you want to work"
 echo "  2. Run: vc"
-echo "  3. iTerm will create a new tab with 4 panes (todo viewer, codex, claude, shell)"
+echo "  3. vc will start ollama serve + vibe-kanban in the background and prep workspace files"

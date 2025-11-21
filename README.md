@@ -1,14 +1,6 @@
-# iTerm 4-Pane Layout with `vc` Command
+# Cursor + Vibe Kanban Workspace with `vc`
 
-This repository provides a **`vc` command** that sets up an **iTerm2 four-pane layout** in any directory.
-
-**Layout:**
-- **Left pane:** watches `todo.md` (auto-created if missing)
-- **Top-right:** runs `codex`
-- **Middle-right:** runs `claude --dangerously-skip-permissions`
-- **Bottom-right:** opens a normal shell in the same directory
-
-Existing iTerm tabs are preserved — a new tab is created for the layout.
+`vc` is a small helper script for working in **Cursor** while keeping your tasks in **vibe-kanban**. It bootstraps the workspace files/templates you need, starts the kanban board on its default port, launches `ollama serve` for the default OpenCode backend, and primes your local environment for agent work.
 
 ---
 
@@ -25,7 +17,6 @@ bash setup.sh
 This will:
 - Install the `vc` command to `~/bin`
 - Add `~/bin` to your `PATH` if needed
-- Put everything in place so the `vc` command can bootstrap the workspace Markdown files on demand
 
 ### 2. Reload your shell configuration
 
@@ -37,26 +28,24 @@ source ~/.zshrc  # or source ~/.bashrc
 
 ## 🚀 Usage
 
-Navigate to any directory where you want to work, then run:
+From any project directory, run:
 
 ```bash
 vc
 ```
 
-iTerm will create a new tab with 4 panes as described above.
-
-The `vc` command creates `AGENTS.md`, `CLAUDE.md`, and `todo.md` only when they are missing before launching the layout. Existing files (including any local symlink choices) remain untouched so your notes are never overwritten.
+The command will prepare the workspace for Cursor, start `ollama serve`, and spin up vibe-kanban on its default port when it's not already running.
 
 ---
 
-## 🧠 How It Works
+## 🧠 What `vc` does
 
-1. The `vc` command is a shell script installed in `~/bin`
-2. When executed, it:
-   - Detects the current working directory
-   - Ensures `AGENTS.md`, `CLAUDE.md`, and `todo.md` exist (creating only missing files)
-   - Runs AppleScript to create a new iTerm tab with 4 panes
-   - Sets up each pane with the appropriate command
+- Starts `ollama serve` in the background on port `11434` when available (for the default OpenCode backend)
+- Starts `npx vibe-kanban` in the background on its default port when not already running (prints the detected URL if available, including when already running)
+- Copies templates (`.codex`, `.claude`, `.design`, `todo.md`, `issues.md`, `refactor.json`) into the current directory without overwriting existing files
+- Syncs `profiles.json` to the vibe-kanban data directory so your saved boards persist locally
+- Adds common local files to `.gitignore` so they stay out of commits
+- Touches `todo.md` and opens it in Cursor/VS Code when the `code` CLI is installed
 
 ---
 
@@ -65,36 +54,24 @@ The `vc` command creates `AGENTS.md`, `CLAUDE.md`, and `todo.md` only when they 
 ```
 .
 ├── scripts/
-│   └── vc            # The vc command script
-├── setup.sh          # Setup script
-├── AGENTS.md         # Agent configuration
-├── CLAUDE.md         # Claude-specific notes
-└── todo.md           # Shared task list surfaced in iTerm
+│   └── vc            # Main vc command script
+├── setup.sh          # Installer for vc and helper CLIs
+├── profiles.json     # vibe-kanban profiles copy source
+├── templates/        # Workspace templates (codex/claude/design/todo/issues)
+└── README.md
 ```
 
 ---
 
 ## 🧩 Customization
 
-To change the commands for each pane, edit `scripts/vc` before running `setup.sh`, or directly edit `~/bin/vc` after installation.
-
-Look for these sections in the AppleScript:
-```applescript
--- left pane: watch todo.md
-write text "cd " & workdir & "; [ ! -f todo.md ] && touch todo.md; while true; do clear; cat todo.md; sleep 1; done"
-
--- top-right: run codex
-write text "cd " & workdir & "; codex"
-
--- middle-right: run claude
-write text "cd " & workdir & "; claude --dangerously-skip-permissions"
-
--- bottom-right: shell
-write text "cd " & workdir
-```
+Edit `scripts/vc` to adjust defaults such as the vibe-kanban port, the workspace templates directory, or the commands launched for your agents. After editing, rerun `bash setup.sh` to reinstall the updated script into `~/bin`.
 
 ---
 
 **Requirements:**
-- macOS with iTerm2
-- The commands you want to run in each pane (`codex`, `claude`, etc.)
+- macOS
+- Ollama installed (with models pulled) for the default OpenCode backend
+- Node.js + `npx` for running `vibe-kanban`
+- Cursor CLI (`code` or `cursor`) if you want `todo.md` to open automatically
+- Agent CLIs you plan to run (e.g., `codex`, `claude`)
