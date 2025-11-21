@@ -10,69 +10,8 @@ template_dir="$script_dir/templates"
 cleanup_dir=""
 todo_path="$WORKDIR/todo.md"
 data_dir="$HOME/Library/Application Support/ai/bloop/vibe-kanban"
-kanban_running=0
-kanban_pid=""
 ollama_port=11434
 ollama_busy=0
-
-print_vibe_port() {
-  local pid_list=("$@")
-  if ! command -v lsof >/dev/null 2>&1; then
-    return 1
-  fi
-
-  # Build PID candidates: supplied list (if any) plus all vibe-kanban matches
-  local candidate_pids=()
-  if [ "${#pid_list[@]}" -gt 0 ]; then
-    candidate_pids+=("${pid_list[@]}")
-  fi
-  while read -r pid; do
-    candidate_pids+=("$pid")
-  done < <(pgrep -f "vibe-kanban" 2>/dev/null || true)
-
-  # Deduplicate
-  local uniq_pids=()
-  local seen=""
-  for pid in "${candidate_pids[@]}"; do
-    [ -z "$pid" ] && continue
-    if [[ ",$seen," != *",$pid,"* ]]; then
-      uniq_pids+=("$pid")
-      seen+="${seen:+,}$pid"
-    fi
-  done
-
-  local port_line=""
-  for pid in "${uniq_pids[@]}"; do
-    port_line=$(lsof -Pan -p "$pid" -iTCP -sTCP:LISTEN 2>/dev/null | awk 'NR>1{print $9; exit}')
-    if [ -n "$port_line" ]; then
-      break
-    fi
-  done
-
-  # Final fallback: scan all listening sockets and inspect process args for vibe-kanban
-  if [ -z "$port_line" ]; then
-    while read -r pid port_field; do
-      if ps -p "$pid" -o args= 2>/dev/null | grep -qi "vibe[- ]*kanban"; then
-        port_line="$port_field"
-        break
-      fi
-    done < <(lsof -nP -iTCP -sTCP:LISTEN 2>/dev/null | awk 'NR>1{print $2 " " $9}')
-  fi
-
-  if [ -z "$port_line" ]; then
-    return 1
-  fi
-
-  local port=${port_line##*:}
-  port=${port%%[^0-9]*}
-  if [ -z "$port" ]; then
-    return 1
-  fi
-
-  local ts
-  ts=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-  echo "$ts  INFO vibe-kanban: Server running on http://127.0.0.1:$port"
-}
 
 mkdir -p "$data_dir"
 if [ -f "$WORKDIR/profiles.json" ]; then
@@ -82,29 +21,7 @@ else
   echo "[warn] profiles.json not found in repo root; skipping copy"
 fi
 
-# Launch vibe-kanban in the background on its default port if not already running
-if pgrep -f "vibe-kanban" >/dev/null 2>&1; then
-  kanban_running=1
-  kanban_pid=$(pgrep -f "vibe-kanban" | head -n1)
-fi
-
-if [ "$kanban_running" -eq 1 ]; then
-  if ! print_vibe_port "$kanban_pid"; then
-    echo "[info] vibe-kanban already running; leaving it as-is"
-  fi
-elif command -v npx >/dev/null 2>&1; then
-  (cd "$WORKDIR" && npx vibe-kanban >/dev/null 2>&1 &)
-  kanban_pid=$!
-  sleep 1
-  if ! print_vibe_port "$kanban_pid"; then
-    echo "[info] Started vibe-kanban in background (pid $kanban_pid)"
-  else
-    :
-  fi
-else
-  echo "[warn] npx not found; cannot start vibe-kanban"
-fi
-
+# Launch vibe-kanban in the background on its default port (multiple processes allowed)
 # Launch ollama serve in the background when port 11434 is free
 if command -v lsof >/dev/null 2>&1; then
   if lsof -iTCP:"$ollama_port" -sTCP:LISTEN >/dev/null 2>&1; then
@@ -169,6 +86,59 @@ if [ ${#added_entries[@]} -gt 0 ]; then
   echo "[info] Updated .gitignore with: ${added_entries[*]}"
 fi
 
+# Seed opencode.json if missing
+opencode_path="$WORKDIR/opencode.json"
+if [ ! -f "$opencode_path" ]; then
+  cat > "$opencode_path" <<'EOF'
+{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    "ollama": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "Ollama (local)",
+      "options": {
+        "baseURL": "http://localhost:11434/v1"
+      },
+      "models": {
+        "hhao/qwen2.5-coder-tools:14b": {
+          "name": "Qwen2.5 Coder Tools 14B (local)"
+        }
+      }
+    }
+  },
+  "model": "ollama/hhao/qwen2.5-coder-tools:14b",
+  "agent": {
+    "build": {
+      "description": "Default coding mode with only OpenCode tools.",
+      "tools": {
+        "read": true,
+        "write": true,
+        "edit": true,
+        "bash": true,
+        "grep": true,
+        "glob": true,
+        "list": true,
+        "webfetch": true,
+        "patch": true,
+        "todoread": true,
+        "todowrite": true
+      },
+      "prompt": "{file:./.claude/CLAUDE.md}"
+    }
+  },
+  "instructions": [
+    ".claude/CLAUDE.md",
+    ".design/architecture.md",
+    ".design/guidelines.md",
+    ".design/decisions.md"
+  ]
+}
+EOF
+  echo "[info] Wrote opencode.json to $opencode_path"
+else
+  echo "[info] opencode.json already exists; leaving as-is"
+fi
+
 # Open todo.md in VS Code for the current directory
 if command -v code >/dev/null 2>&1; then
   [ -f "$todo_path" ] || touch "$todo_path"
@@ -178,3 +148,11 @@ else
 fi
 
 echo "[done] Workspace prepared for: $WORKDIR"
+
+# Launch vibe-kanban in the foreground at the end (vibe-kanban will pick an available port)
+if command -v npx >/dev/null 2>&1; then
+  echo "[info] Starting vibe-kanban in foreground (Ctrl+C to stop; logs below)"
+  (cd "$WORKDIR" && npx vibe-kanban)
+else
+  echo "[warn] npx not found; cannot start vibe-kanban"
+fi

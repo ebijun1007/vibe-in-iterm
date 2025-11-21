@@ -34,15 +34,16 @@ From any project directory, run:
 vc
 ```
 
-The command will prepare the workspace for Cursor, start `ollama serve`, and spin up vibe-kanban on its default port when it's not already running.
+The command will prepare the workspace for Cursor, start `ollama serve`, and then launch vibe-kanban in the foreground on its default port (vibe-kanban will pick an available port).
 
 ---
 
 ## 🧠 What `vc` does
 
 - Starts `ollama serve` in the background on port `11434` when available (for the default OpenCode backend)
-- Starts `npx vibe-kanban` in the background on its default port when not already running (prints the detected URL if available, including when already running)
+- Launches `npx vibe-kanban` in the foreground on its default port (vibe-kanban picks an available port; multiple processes are allowed)
 - Copies templates (`.codex`, `.claude`, `.design`, `todo.md`, `issues.md`, `refactor.json`) into the current directory without overwriting existing files
+- Seeds `opencode.json` with the local Ollama configuration if it is missing
 - Syncs `profiles.json` to the vibe-kanban data directory so your saved boards persist locally
 - Adds common local files to `.gitignore` so they stay out of commits
 - Touches `todo.md` and opens it in Cursor/VS Code when the `code` CLI is installed
