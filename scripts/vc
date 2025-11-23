@@ -15,18 +15,9 @@ repo_url="https://github.com/ebijun1007/vibe-in-iterm.git"
 template_dir="$script_dir/templates"
 cleanup_dir=""
 todo_path="$WORKDIR/todo.md"
-data_dir="$HOME/Library/Application Support/ai/bloop/vibe-kanban"
-OPENCODE_CONFIG="$WORKDIR/.opencode/opencode.json"
+data_dir="$HOME/Library/Application Support/ai.bloop.vibe-kanban"
 CODEX_HOME="$WORKDIR/.codex"
 env_exports=()
-
-mkdir -p "$data_dir"
-if [ -f "$WORKDIR/profiles.json" ]; then
-  cp "$WORKDIR/profiles.json" "$data_dir/profiles.json"
-  echo "[info] Copied profiles.json to $data_dir"
-else
-  echo "[warn] profiles.json not found in repo root; skipping copy"
-fi
 
 if [ ! -d "$template_dir" ]; then
   if command -v git >/dev/null 2>&1; then
@@ -54,7 +45,7 @@ fi
 [ -n "$cleanup_dir" ] && rm -rf "$cleanup_dir"
 
 # Ensure .gitignore has expected entries
-ignore_entries=(.claude .opencode .codex .design refactor.json issues.md todo.md)
+ignore_entries=(.claude .codex .design refactor.json issues.md todo.md)
 gitignore_path="$WORKDIR/.gitignore"
 [[ -f "$gitignore_path" ]] || touch "$gitignore_path"
 added_entries=()
@@ -66,44 +57,6 @@ for entry in "${ignore_entries[@]}"; do
 done
 if [ ${#added_entries[@]} -gt 0 ]; then
   echo "[info] Updated .gitignore with: ${added_entries[*]}"
-fi
-
-# Seed opencode.json if missing
-opencode_path="$WORKDIR/opencode.json"
-if [ ! -f "$opencode_path" ]; then
-  cat > "$opencode_path" <<'EOF'
-{
-  "$schema": "https://opencode.ai/config.json",
-  "agent": {
-    "build": {
-      "description": "Default coding mode with only OpenCode tools.",
-      "tools": {
-        "read": true,
-        "write": true,
-        "edit": true,
-        "bash": true,
-        "grep": true,
-        "glob": true,
-        "list": true,
-        "webfetch": true,
-        "patch": true,
-        "todoread": true,
-        "todowrite": true
-      },
-      "prompt": "{file:./.claude/CLAUDE.md}"
-    }
-  },
-  "instructions": [
-    ".claude/CLAUDE.md",
-    ".design/architecture.md",
-    ".design/guidelines.md",
-    ".design/decisions.md"
-  ]
-}
-EOF
-  echo "[info] Wrote opencode.json to $opencode_path"
-else
-  echo "[info] opencode.json already exists; leaving as-is"
 fi
 
 # Open todo.md in VS Code for the current directory
@@ -129,7 +82,6 @@ else
 fi
 
 # Build shared environment exports for the iTerm panes
-env_exports+=("OPENCODE_CONFIG=$OPENCODE_CONFIG")
 env_exports+=("CODEX_HOME=$CODEX_HOME")
 
 env_prefix=""

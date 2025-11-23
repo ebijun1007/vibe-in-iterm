@@ -43,6 +43,16 @@ echo "[info] PATH already configured in $SHELL_RC"
   fi
 fi
 
+# 4. Copy profiles.json to vibe-kanban config directory
+VIBE_KANBAN_DIR="$HOME/Library/Application Support/ai.bloop.vibe-kanban"
+mkdir -p "$VIBE_KANBAN_DIR"
+if [ -f "profiles.json" ]; then
+  cp profiles.json "$VIBE_KANBAN_DIR/profiles.json"
+  echo "[info] Copied profiles.json to $VIBE_KANBAN_DIR"
+else
+  echo "[warning] profiles.json not found in current directory"
+fi
+
 echo "[done] Setup complete!"
 echo ""
 echo "Usage:"

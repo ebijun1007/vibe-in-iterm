@@ -34,18 +34,44 @@ From any project directory, run:
 vc
 ```
 
-The command will prepare the workspace for Cursor and launch vibe-kanban in the foreground on its default port (vibe-kanban will pick an available port).
+The command will prepare the workspace and create an iTerm layout with coding agents.
 
 ---
 
 ## 🧠 What `vc` does
 
-- Launches `npx vibe-kanban` in the foreground on its default port (vibe-kanban picks an available port; multiple processes are allowed)
 - Copies templates (`.codex`, `.claude`, `.design`, `todo.md`, `issues.md`, `refactor.json`) into the current directory without overwriting existing files
-- Seeds `opencode.json` if it is missing
-- Syncs `profiles.json` to the vibe-kanban data directory so your saved boards persist locally
 - Adds common local files to `.gitignore` so they stay out of commits
 - Touches `todo.md` and opens it in Cursor/VS Code when the `code` CLI is installed
+- Creates an iTerm layout with 3 panes: codex (top-left), claude (top-right), and terminal (bottom)
+
+---
+
+## 📁 Files and Directories Modified by Commands
+
+### `setup.sh` Command
+
+When you run `bash setup.sh`, the following files and directories are created or modified:
+
+| Path | Action | Description |
+|------|--------|-------------|
+| `~/bin/` | Created | Directory for user commands |
+| `~/bin/vc` | Created/Overwritten | vc command installation |
+| `~/.zshrc` or `~/.bashrc` | Modified | Adds `~/bin` to PATH (if not present) |
+| `~/Library/Application Support/ai.bloop.vibe-kanban/` | Created | vibe-kanban data directory |
+| `~/Library/Application Support/ai.bloop.vibe-kanban/profiles.json` | Created/Overwritten | Copied from repo root |
+
+### `vc` Command
+
+When you run `vc` from any project directory, the following files and directories are created or modified:
+
+| Path | Action | Description |
+|------|--------|-------------|
+| `$WORKDIR/.gitignore` | Modified | Adds entries: `.claude`, `.codex`, `.design`, `refactor.json`, `issues.md`, `todo.md` |
+| `$WORKDIR/todo.md` | Created | Empty file created and opened in VS Code (only if missing) |
+| `$WORKDIR/*` | Created | Template files copied from `templates/` directory (only if missing, no overwrite) |
+
+> **Note:** `$WORKDIR` refers to the current working directory where you execute the `vc` command.
 
 ---
 
@@ -65,12 +91,11 @@ The command will prepare the workspace for Cursor and launch vibe-kanban in the 
 
 ## 🧩 Customization
 
-Edit `scripts/vc` to adjust defaults such as the vibe-kanban port, the workspace templates directory, or the commands launched for your agents. After editing, rerun `bash setup.sh` to reinstall the updated script into `~/bin`.
+Edit `scripts/vc` to adjust defaults such as the workspace templates directory or the commands launched for your agents. After editing, rerun `bash setup.sh` to reinstall the updated script into `~/bin`.
 
 ---
 
 **Requirements:**
-- macOS
-- Node.js + `npx` for running `vibe-kanban`
-- Cursor CLI (`code` or `cursor`) if you want `todo.md` to open automatically
+- macOS with iTerm.app
+- VS Code CLI (`code`) if you want `todo.md` to open automatically
 - Agent CLIs you plan to run (e.g., `codex`, `claude`)
