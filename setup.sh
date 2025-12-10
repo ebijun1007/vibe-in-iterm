@@ -43,7 +43,38 @@ echo "[info] PATH already configured in $SHELL_RC"
   fi
 fi
 
-# 4. Copy profiles.json to vibe-kanban config directory
+# 4. Configure global gitignore for template files
+GLOBAL_GITIGNORE="$HOME/.config/git/ignore"
+mkdir -p "$(dirname "$GLOBAL_GITIGNORE")"
+
+# Check if global gitignore is configured
+CURRENT_EXCLUDES=$(git config --global core.excludesFile 2>/dev/null || echo "")
+if [ -z "$CURRENT_EXCLUDES" ]; then
+  git config --global core.excludesFile "$GLOBAL_GITIGNORE"
+  echo "[info] Set global gitignore to $GLOBAL_GITIGNORE"
+fi
+
+# Use the configured path
+GLOBAL_GITIGNORE=$(git config --global core.excludesFile)
+
+# Files/directories from templates/ to ignore globally
+IGNORE_PATTERNS=(
+  ".design/"
+  ".claude/"
+  ".codex/"
+  ".envrc"
+  ".mcp.json"
+)
+
+for pattern in "${IGNORE_PATTERNS[@]}"; do
+  if ! grep -qxF "$pattern" "$GLOBAL_GITIGNORE" 2>/dev/null; then
+    echo "$pattern" >> "$GLOBAL_GITIGNORE"
+    echo "[info] Added '$pattern' to global gitignore"
+  fi
+done
+echo "[info] Global gitignore configured ($GLOBAL_GITIGNORE)"
+
+# 5. Copy profiles.json to vibe-kanban config directory
 VIBE_KANBAN_DIR="$HOME/Library/Application Support/ai.bloop.vibe-kanban"
 mkdir -p "$VIBE_KANBAN_DIR"
 if [ -f "profiles.json" ]; then
