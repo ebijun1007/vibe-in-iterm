@@ -66,6 +66,12 @@ IGNORE_PATTERNS=(
   ".mcp.json"
 )
 
+# Ensure file ends with newline before appending
+if [ -f "$GLOBAL_GITIGNORE" ] && [ -s "$GLOBAL_GITIGNORE" ]; then
+  # Add newline if file doesn't end with one
+  [ -n "$(tail -c1 "$GLOBAL_GITIGNORE")" ] && echo "" >> "$GLOBAL_GITIGNORE"
+fi
+
 for pattern in "${IGNORE_PATTERNS[@]}"; do
   if ! grep -qxF "$pattern" "$GLOBAL_GITIGNORE" 2>/dev/null; then
     echo "$pattern" >> "$GLOBAL_GITIGNORE"
