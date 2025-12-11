@@ -32,7 +32,10 @@ fi
 
 # Copy templates into the current directory without overwriting existing files
 if [ -n "$template_dir" ] && [ -d "$template_dir" ]; then
-  mapfile -t cloned < <(rsync -ai --ignore-existing "$template_dir"/ "$WORKDIR"/ | cut -c12-)
+  cloned=()
+  while IFS= read -r line; do
+    cloned+=("$line")
+  done < <(rsync -ai --ignore-existing "$template_dir"/ "$WORKDIR"/ | cut -c12-)
   if [ ${#cloned[@]} -gt 0 ]; then
     echo "[info] Cloned templates into $WORKDIR: ${cloned[*]}"
   else
