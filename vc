@@ -32,15 +32,8 @@ on run
   set envPrefix to (system attribute "ENV_PREFIX")
 
   tell application "iTerm"
-    -- keep current window, just add a new tab
-    set theWindow to current window
-    tell theWindow
-      create tab with default profile
-      set theTab to current tab
-    end tell
-
-    -- first session in the new tab
-    tell current session of theTab
+    -- use current session and split it
+    tell current session of current window
       -- split into top and bottom
       set topPane to it
       set bottomPane to (split horizontally with default profile)
