@@ -46,7 +46,29 @@ Your job in this command is:
    - Do **not** interact with remotes (no `git push`).
    - Output:
      - a brief summary of what is being committed
-     - the exact `git commit -m "...message..."` command that the user can run.
+     - the exact git command that the user can run.
+   - For multi-line commit messages, use HEREDOC format with these **strict rules**:
+     - Use `<<'EOF'` (single-quoted to prevent variable expansion)
+     - The closing `EOF` must be at the **beginning of the line** with **no leading spaces, tabs, or trailing whitespace**
+     - Commit message body must also have **no leading indentation**
+     - **IMPORTANT**: When outputting the command, do NOT indent the HEREDOC content or EOF delimiter, even if surrounding text is indented
+
+Example HEREDOC command (copy exactly as shown, no indentation):
+
+```bash
+git add file1.rb file2.rb && \
+git commit -m "$(cat <<'EOF'
+Short summary line
+
+- Detail point 1
+- Detail point 2
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+
+Co-Authored-By: Claude <noreply@anthropic.com>
+EOF
+)"
+```
 
 5. **General rules**
    - Never push or interact with remotes in this command (no `git push`).
