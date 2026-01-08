@@ -1,15 +1,5 @@
 {
   "mcpServers": {
-    "vibe_kanban": {
-      "type": "stdio",
-      "command": "npx",
-      "args": [
-        "-y",
-        "vibe-kanban",
-        "--mcp"
-      ],
-      "env": {}
-    },
     "codex": {
       "type": "stdio",
       "command": "codex",
