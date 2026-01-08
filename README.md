@@ -1,6 +1,6 @@
 # Cursor + Vibe Kanban Workspace with `vc`
 
-`vc` is a small helper script for working in **Cursor** while keeping your tasks in **vibe-kanban**. It bootstraps the workspace files/templates you need, starts the kanban board on its default port, and primes your local environment for agent work.
+`vc` is a small helper script for working in **Cursor** while keeping your tasks in **vibe-kanban**. It bootstraps your workspace, merges useful commands/skills into your global config, and creates an iTerm layout for agent work.
 
 ---
 
@@ -15,13 +15,12 @@ bash setup.sh
 ```
 
 This will:
-- Install the `vc` command to `~/bin`
-- Add `~/bin` to your `PATH` if needed
+- Add the `vc` function to your `~/.zshrc`
 
 ### 2. Reload your shell configuration
 
 ```bash
-source ~/.zshrc  # or source ~/.bashrc
+source ~/.zshrc
 ```
 
 ---
@@ -40,9 +39,9 @@ The command will prepare the workspace and create an iTerm layout with coding ag
 
 ## 🧠 What `vc` does
 
-- Copies templates (`.codex`, `.claude`, `.design`, `.design/todo.md`, `issues.md`, `refactor.json`) into the current directory without overwriting existing files
-- Adds common local files to `.gitignore` so they stay out of commits
-- Touches `.design/todo.md` and opens it in Cursor/VS Code when the `code` CLI is installed
+- Copies `.design` directory into the current project (only if it doesn't exist)
+- Merges commands/skills/hooks from this repo into `~/.claude` (without overwriting existing files)
+- Merges prompts/skills from this repo into `~/.codex` (without overwriting existing files)
 - Creates an iTerm layout with 3 panes: codex (top-left), claude (top-right), and terminal (bottom)
 
 ---
@@ -51,15 +50,11 @@ The command will prepare the workspace and create an iTerm layout with coding ag
 
 ### `setup.sh` Command
 
-When you run `bash setup.sh`, the following files and directories are created or modified:
+When you run `bash setup.sh`, the following files are modified:
 
 | Path | Action | Description |
 |------|--------|-------------|
-| `~/bin/` | Created | Directory for user commands |
-| `~/bin/vc` | Created/Overwritten | vc command installation |
-| `~/.zshrc` or `~/.bashrc` | Modified | Adds `~/bin` to PATH (if not present) |
-| `~/Library/Application Support/ai.bloop.vibe-kanban/` | Created | vibe-kanban data directory |
-| `~/Library/Application Support/ai.bloop.vibe-kanban/profiles.json` | Created/Overwritten | Copied from repo root |
+| `~/.zshrc` | Modified | Adds `vc` function |
 
 ### `vc` Command
 
@@ -67,9 +62,12 @@ When you run `vc` from any project directory, the following files and directorie
 
 | Path | Action | Description |
 |------|--------|-------------|
-| `$WORKDIR/.gitignore` | Modified | Adds entries: `.claude`, `.codex`, `.design`, `refactor.json`, `issues.md`, `.design/todo.md` |
-| `$WORKDIR/.design/todo.md` | Created | Empty file created and opened in VS Code (only if missing) |
-| `$WORKDIR/*` | Created | Template files copied from `templates/` directory (only if missing, no overwrite) |
+| `$WORKDIR/.design/` | Created | Copied from repo (only if missing) |
+| `~/.claude/commands/` | Merged | Commands added (existing files preserved) |
+| `~/.claude/skills/` | Merged | Skills added (existing files preserved) |
+| `~/.claude/hooks/` | Merged | Hooks added (existing files preserved) |
+| `~/.codex/prompts/` | Merged | Prompts added (existing files preserved) |
+| `~/.codex/skills/` | Merged | Skills added (existing files preserved) |
 
 > **Note:** `$WORKDIR` refers to the current working directory where you execute the `vc` command.
 
@@ -82,9 +80,10 @@ When you run `vc` from any project directory, the following files and directorie
 ├── vc                # Wrapper that fetches and runs the latest vc-core script
 ├── scripts/
 │   └── vc-core.sh    # Core vc logic
-├── setup.sh          # Installer for vc and helper CLIs
-├── profiles.json     # vibe-kanban profiles copy source
-├── templates/        # Workspace templates (codex/claude/design/todo/issues)
+├── setup.sh          # Adds vc function to ~/.zshrc
+├── .claude/          # Commands, skills, hooks to merge into ~/.claude
+├── .codex/           # Prompts, skills to merge into ~/.codex
+├── .design/          # Design files template for projects
 └── README.md
 ```
 
@@ -92,7 +91,7 @@ When you run `vc` from any project directory, the following files and directorie
 
 ## 🧩 Customization
 
-Edit `scripts/vc-core.sh` to adjust defaults such as the workspace templates directory or the commands launched for your agents. After editing, rerun `bash setup.sh` to reinstall the updated script into `~/bin`.
+Edit `scripts/vc-core.sh` to adjust the commands launched for your agents or modify merge behavior.
 
 ---
 
