@@ -97,5 +97,5 @@ Edit `scripts/vc-core.sh` to adjust the commands launched for your agents or mod
 
 **Requirements:**
 - macOS with iTerm.app
-- VS Code CLI (`code`) if you want `.design/todo.md` to open automatically
+- VS Code CLI (`code`) if you want `.design/tasks/` to open automatically
 - Agent CLIs you plan to run (e.g., `codex`, `claude`)
