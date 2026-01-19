@@ -39,9 +39,9 @@ The command will prepare the workspace and create an iTerm layout with coding ag
 
 ## 🧠 What `vc` does
 
-- Copies `.design` directory into the current project (only if it doesn't exist)
-- Merges commands/skills/hooks from this repo into `~/.claude` (without overwriting existing files)
-- Merges prompts/skills from this repo into `~/.codex` (without overwriting existing files)
+- Copies `.design` into the current project (skips existing files)
+- Copies `.claude` into `~/.claude` (skips existing files; except `CLAUDE.md` is overwritten)
+- Copies `.codex` into `~/.codex` (skips existing files; except `AGENTS.md` is overwritten)
 - Creates an iTerm layout with 3 panes: codex (top-left), claude (top-right), and terminal (bottom)
 
 ---
@@ -62,12 +62,11 @@ When you run `vc` from any project directory, the following files and directorie
 
 | Path | Action | Description |
 |------|--------|-------------|
-| `$WORKDIR/.design/` | Created | Copied from repo (only if missing) |
-| `~/.claude/commands/` | Merged | Commands added (existing files preserved) |
-| `~/.claude/skills/` | Merged | Skills added (existing files preserved) |
-| `~/.claude/hooks/` | Merged | Hooks added (existing files preserved) |
-| `~/.codex/prompts/` | Merged | Prompts added (existing files preserved) |
-| `~/.codex/skills/` | Merged | Skills added (existing files preserved) |
+| `$WORKDIR/.design/` | Copied | New files copied from template (existing files preserved) |
+| `~/.claude/` | Copied | New files copied from template (existing files preserved) |
+| `~/.claude/CLAUDE.md` | Overwritten | Always overwritten from template (if present) |
+| `~/.codex/` | Copied | New files copied from template (existing files preserved) |
+| `~/.codex/AGENTS.md` | Overwritten | Always overwritten from template (if present) |
 
 > **Note:** `$WORKDIR` refers to the current working directory where you execute the `vc` command.
 

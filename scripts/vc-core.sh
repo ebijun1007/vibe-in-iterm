@@ -45,61 +45,65 @@ if [ -z "$src_root" ]; then
   exit 1
 fi
 
-# .design をワークディレクトリにコピー（存在しない場合のみ）
-if [ ! -d "$WORKDIR/.design" ]; then
-  if [ ! -d "$src_root/.design" ]; then
-    echo "[error] Missing .design in template source: $VC_TEMPLATE_REPO@$VC_TEMPLATE_REF" >&2
-    exit 1
+merge_tree_skip_existing() {
+  local src_dir="$1"
+  local dest_dir="$2"
+
+  [ -d "$src_dir" ] || return 0
+  mkdir -p "$dest_dir"
+
+  while IFS= read -r -d '' rel; do
+    rel="${rel#./}"
+    [ -n "$rel" ] || continue
+    [ "$(basename "$rel")" = ".keep" ] && continue
+    [ "$rel" = "CLAUDE.md" ] && continue
+    [ "$rel" = "AGENTS.md" ] && continue
+
+    local src_path="$src_dir/$rel"
+    local dest_path="$dest_dir/$rel"
+
+    if [ -d "$src_path" ]; then
+      mkdir -p "$dest_path"
+      continue
+    fi
+
+    mkdir -p "$(dirname "$dest_path")"
+    if [ ! -e "$dest_path" ]; then
+      cp -p "$src_path" "$dest_path"
+      echo "[info] Added: $dest_path"
+    fi
+  done < <(cd "$src_dir" && find . -mindepth 1 -print0)
+}
+
+copy_overwrite_if_exists() {
+  local src_file="$1"
+  local dest_file="$2"
+
+  if [ -f "$src_file" ]; then
+    mkdir -p "$(dirname "$dest_file")"
+    cp -p "$src_file" "$dest_file"
+    echo "[info] Overwrote: $dest_file"
   fi
-  cp -R -p "$src_root/.design" "$WORKDIR/.design"
-  echo "[info] Created .design directory"
+}
+
+# .design をワークディレクトリに反映（既存ファイルはスキップ）
+if [ ! -d "$src_root/.design" ]; then
+  echo "[error] Missing .design in template source: $VC_TEMPLATE_REPO@$VC_TEMPLATE_REF" >&2
+  exit 1
 fi
+merge_tree_skip_existing "$src_root/.design" "$WORKDIR/.design"
 
 # AGENTS.md / CLAUDE.md はテンプレがあれば上書きコピーして揃える
-for file in AGENTS.md CLAUDE.md; do
-  if [ -f "$src_root/$file" ]; then
-    cp -p "$src_root/$file" "$WORKDIR/$file"
-    echo "[info] Copied to $WORKDIR: $file"
-  fi
-done
-
-# ~/.claude に追加分をマージ（既存ファイルは上書きしない）
+# ~/.claude / ~/.codex はテンプレから追加分を反映（既存ファイルはスキップ）
+# ただし CLAUDE.md / AGENTS.md は常に上書き
 CLAUDE_HOME="$HOME/.claude"
-mkdir -p "$CLAUDE_HOME"
-for subdir in commands skills hooks; do
-  if [ -d "$src_root/.claude/$subdir" ]; then
-    mkdir -p "$CLAUDE_HOME/$subdir"
-    for file in "$src_root/.claude/$subdir"/*; do
-      [ -e "$file" ] || continue
-      fname="$(basename "$file")"
-      # .keep ファイルはスキップ
-      [ "$fname" = ".keep" ] && continue
-      if [ ! -e "$CLAUDE_HOME/$subdir/$fname" ]; then
-        cp -R -p "$file" "$CLAUDE_HOME/$subdir/$fname"
-        echo "[info] Added to ~/.claude/$subdir: $fname"
-      fi
-    done
-  fi
-done
-
-# ~/.codex に追加分をマージ（既存ファイルは上書きしない）
 CODEX_HOME="${CODEX_HOME:-$HOME/.codex}"
-mkdir -p "$CODEX_HOME"
-for subdir in prompts skills; do
-  if [ -d "$src_root/.codex/$subdir" ]; then
-    mkdir -p "$CODEX_HOME/$subdir"
-    for file in "$src_root/.codex/$subdir"/*; do
-      [ -e "$file" ] || continue
-      fname="$(basename "$file")"
-      # .keep ファイルはスキップ
-      [ "$fname" = ".keep" ] && continue
-      if [ ! -e "$CODEX_HOME/$subdir/$fname" ]; then
-        cp -R -p "$file" "$CODEX_HOME/$subdir/$fname"
-        echo "[info] Added to ~/.codex/$subdir: $fname"
-      fi
-    done
-  fi
-done
+
+merge_tree_skip_existing "$src_root/.claude" "$CLAUDE_HOME"
+merge_tree_skip_existing "$src_root/.codex" "$CODEX_HOME"
+
+copy_overwrite_if_exists "$src_root/.claude/CLAUDE.md" "$CLAUDE_HOME/CLAUDE.md"
+copy_overwrite_if_exists "$src_root/.codex/AGENTS.md" "$CODEX_HOME/AGENTS.md"
 
 echo "[done] Workspace prepared for: $WORKDIR"
 
