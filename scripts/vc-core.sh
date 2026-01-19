@@ -55,6 +55,14 @@ if [ ! -d "$WORKDIR/.design" ]; then
   echo "[info] Created .design directory"
 fi
 
+# AGENTS.md / CLAUDE.md はテンプレがあれば上書きコピーして揃える
+for file in AGENTS.md CLAUDE.md; do
+  if [ -f "$src_root/$file" ]; then
+    cp -p "$src_root/$file" "$WORKDIR/$file"
+    echo "[info] Copied to $WORKDIR: $file"
+  fi
+done
+
 # ~/.claude に追加分をマージ（既存ファイルは上書きしない）
 CLAUDE_HOME="$HOME/.claude"
 mkdir -p "$CLAUDE_HOME"
