@@ -1,6 +1,6 @@
-# Cursor + Vibe Kanban Workspace with `vc`
+# Coding Agent Workspace with `vc`
 
-`vc` is a small helper script for working in **Cursor** while keeping your tasks in **vibe-kanban**. It bootstraps your workspace, merges useful commands/skills into your global config, and creates an iTerm layout for agent work.
+`vc` is a small helper script for working with coding agents. It bootstraps your workspace, merges useful commands/skills into your global config, and creates an iTerm layout for agent work.
 
 ---
 
