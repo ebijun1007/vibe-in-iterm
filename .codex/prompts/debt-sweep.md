@@ -121,7 +121,7 @@ AGENTS.md の編集制限を、以下の範囲で解除する：
 ```bash
 git add .design/ && \
 git commit -m "$(cat <<'EOF'
-chore: audit technical debt and create refactor tasks
+chore: debt-sweep — file technical debt as refactor tasks
 
 Co-Authored-By: Claude <noreply@anthropic.com>
 EOF
