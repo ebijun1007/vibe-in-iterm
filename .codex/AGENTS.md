@@ -116,3 +116,70 @@
 - 自分から大規模な再設計を提案しない。
 - 実装コードを書かない（厳密に設計レベルに留まる）。ただし `.design/tasks/` のタスク読み込み後はそのスコープ内で実装可能。
 
+---
+
+## タスクトリアージ
+
+タスク作成時に、以下の基準で `owner` フィールドに `codex` または `claude-code` を設定する。
+判断が困難な場合はユーザーに確認する。
+
+### owner: codex の条件（全て満たすこと）
+
+1. **完了基準が機械的に検証可能**: コンパイル成功、テスト通過、clippy通過で判定できる
+2. **仕様が完全に確定済み**: 曖昧さがなく、Open Questionsが空
+3. **影響範囲が限定的**: 変更対象が1〜3ファイル
+4. **外部サービス不要**: API呼び出し、Webリサーチ、git push操作が不要
+5. **サンドボックス内で完結**: ネットワークアクセス不要
+
+典型例: バグ修正（原因特定済み）、リファクタリング、テスト追加、clippy修正、SQL条件修正
+
+### owner: claude-code の条件（いずれか1つでも該当）
+
+1. **要件に曖昧さがある**: ユーザー確認が必要、設計判断を含む
+2. **外部サービス連携**: Shopify API、eBay API、Cloudflare Workers等
+3. **横断的変更**: 4ファイル以上の変更、DBスキーマ変更
+4. **調査が必要**: 根本原因分析、仕様リサーチ、Go/No-Go判定
+5. **サブエージェント活用が有効**: 並列探索(Explore)、設計(Plan)、テスト実行(test-runner)
+6. **git操作**: ブランチ作成、コミット、PR作成、push
+
+典型例: 新機能設計、API連携実装、アーキテクチャ変更、未知のバグ調査
+
+### 判定フロー
+
+```
+Open Questionsがある？ → YES → claude-code
+  ↓ NO
+変更対象が4ファイル以上？ → YES → claude-code
+  ↓ NO
+外部API/ネットワークが必要？ → YES → claude-code
+  ↓ NO
+設計判断が必要？ → YES → claude-code
+  ↓ NO
+→ codex
+```
+
+### Codex向けタスク作成ガイド
+
+`owner: codex` のタスクには以下を厳密に記載する。
+
+1. **Files / Components**: 全ファイルをパスで列挙
+2. **Acceptance Criteria**: 機械的に検証可能な形式
+   - `cargo build --release` が成功する
+   - `cargo test -q` で対象テストが通る
+   - `cargo clippy --all-targets -- -D warnings` が通る
+3. **Implementation Notes**: 変更前コード引用 + 変更後の期待形
+4. **Codex Execution Guide**: ステップバイステップの実行手順
+
+### Claude Code向けタスク作成ガイド
+
+`owner: claude-code` のタスクには以下を重視する。
+
+1. **Background / Problem**: 十分なコンテキスト（履歴なしで理解可能な粒度）
+2. **Open Questions**: 未確定事項とユーザー確認ポイント
+3. **Agent Strategy**: サブエージェント活用方針（Explore/Plan/Test）
+4. **User Interaction Points**: ユーザー確認が必要なタイミング
+
+> **Note**: `owner: codex` のタスクであっても、本ファイル冒頭の権限制約は適用される。
+> Codex Execution Guide はユーザーが承認後に実行する手順を定義するものであり、
+> 自動実行の許可ではない。
+
