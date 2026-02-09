@@ -15,7 +15,7 @@ description: プロジェクトの設計ドキュメント(.design/)を管理・
 | `architecture.md` | システムアーキテクチャ・構成図・技術スタック | 設計変更時、新コンポーネント追加時 |
 | `guidelines.md` | コーディング規約・命名規則・ベストプラクティス | ルール追加・変更時 |
 | `decisions.md` | 技術選定・設計判断の記録（ADR形式） | 重要な意思決定時 |
-| `todo.md` | タスク管理・進捗追跡 | 作業開始・完了時 |
+| `tasks/` | タスク管理（個別タスクごとのMarkdownファイル） | タスク作成・更新・完了時 |
 | `non-blocking-issues.md` | 後回しにする問題・技術的負債の記録 | 問題発見時、解決時 |
 
 ## 各ドキュメントの詳細
@@ -56,19 +56,12 @@ description: プロジェクトの設計ドキュメント(.design/)を管理・
 
 ```
 
-### todo.md
-タスクの「状態」を記録する。
-```markdown
-## 進行中
-- [ ] [タスク名] - [担当/期限]
-
-## 保留
-- [ ] [タスク名] - [保留理由]
-
-## 完了
-- [x] [タスク名] - [完了日]
-
-```
+### tasks/
+タスクを個別ファイルで管理する。
+- ファイル名: `YYYYMMDD-short-slug.md`
+- テンプレート: `tasks/TEMPLATE.md`
+- frontmatter で `status`、`priority`、`owner` 等を管理
+- `owner` フィールドで担当エージェント（`codex` / `claude-code`）を指定
 
 ### non-blocking-issues.md
 後回しの問題を記録する。
