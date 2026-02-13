@@ -126,14 +126,14 @@ on run
       set bottomRightPane to (split vertically with default profile)
     end tell
 
-    -- top pane: run claude code (dangerously skip permissions)
+    -- top pane: run codex in the repo
     tell topPane
-      write text "cd " & workdir & "; if command -v claude >/dev/null 2>&1; then claude --dangerously-skip-permissions; else echo \"[warn] claude not found in PATH\"; fi"
+      write text "cd " & workdir & "; if command -v codex >/dev/null 2>&1; then codex; else echo \"[warn] codex not found in PATH\"; fi"
     end tell
 
-    -- bottom left pane: run codex in the repo
+    -- bottom left pane: run claude code (dangerously skip permissions)
     tell bottomLeftPane
-      write text "cd " & workdir & "; if command -v codex >/dev/null 2>&1; then codex; else echo \"[warn] codex not found in PATH\"; fi"
+      write text "cd " & workdir & "; if command -v claude >/dev/null 2>&1; then claude --dangerously-skip-permissions; else echo \"[warn] claude not found in PATH\"; fi"
     end tell
 
     -- bottom right pane: leave as terminal (just cd to workdir)

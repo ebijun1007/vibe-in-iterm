@@ -42,7 +42,7 @@ The command will prepare the workspace and create an iTerm layout with coding ag
 - Copies `.design` into the current project (skips existing files)
 - Copies `.claude` into `~/.claude` (skips existing files; except `CLAUDE.md` is overwritten)
 - Copies `.codex` into `~/.codex` (skips existing files; except `AGENTS.md` is overwritten)
-- Creates an iTerm layout with 3 panes: codex (top-left), claude (top-right), and terminal (bottom)
+- Creates an iTerm layout with 3 panes: codex (top), claude (bottom-left), and terminal (bottom-right)
 
 ---
 
