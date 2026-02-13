@@ -10,7 +10,7 @@ fi
 # Get current working directory
 WORKDIR="$PWD"
 
-VC_TEMPLATE_REPO="${VC_TEMPLATE_REPO:-ebijun1007/vibe-in-iterm}"
+VC_TEMPLATE_REPO="${VC_TEMPLATE_REPO:-ebijun1007/vibe-coding}"
 VC_TEMPLATE_REF="${VC_TEMPLATE_REF:-master}"
 VC_TEMPLATE_ARCHIVE_URL="https://codeload.github.com/${VC_TEMPLATE_REPO}/tar.gz/${VC_TEMPLATE_REF}"
 

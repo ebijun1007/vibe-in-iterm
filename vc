@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-VC_TEMPLATE_REPO="${VC_TEMPLATE_REPO:-ebijun1007/vibe-in-iterm}"
+VC_TEMPLATE_REPO="${VC_TEMPLATE_REPO:-ebijun1007/vibe-coding}"
 VC_TEMPLATE_REF="${VC_TEMPLATE_REF:-master}"
 VC_CORE_PATH="${VC_CORE_PATH:-scripts/vc-core.sh}"
 VC_REMOTE_URL="${VC_REMOTE_URL:-https://raw.githubusercontent.com/${VC_TEMPLATE_REPO}/${VC_TEMPLATE_REF}/${VC_CORE_PATH}}"
