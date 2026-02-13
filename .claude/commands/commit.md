@@ -20,9 +20,7 @@ Your job in this command is:
      - style (readability, consistency with existing patterns)
    - Clearly separate findings into:
      - **BLOCKING issues** (must be addressed before committing)
-     - **NON-BLOCKING improvements**, further classified as:
-       - **QUICK-FIX**: small effort (a few lines), localized change, no cross-functional risk → fix in this process
-       - **DEFERRED**: large effort relative to benefit, cross-functional impact concerns, or requires design discussion → postpone
+     - **NON-BLOCKING improvements** (can be postponed / cleaned up later)
 
 3. **If there is ANY BLOCKING issue**
    - **Do NOT run `git commit`.**
@@ -38,10 +36,7 @@ Your job in this command is:
 
 4. **If there are NO BLOCKING issues**
    - It is safe to commit.
-   - If there are **QUICK-FIX** non-blocking items, fix them now before committing.
-     - Apply the fixes, stage the changed files, and include them in the same commit.
-     - List the applied quick-fixes in the commit output so the user knows what was auto-fixed.
-   - Do **not** modify files for any other purpose in this command.
+   - Do **not** modify any files in this command.
    - Commit message:
      - If `MSG` is provided, use it as the commit message.
      - Otherwise, construct a clear and concise message describing the change.
@@ -80,8 +75,7 @@ EOF
    - During code review, prioritize collaborating with available Codex MCP tools.
      - When static analysis of diffs or detailed findings are needed, call Codex MCP review tools and reference their results.
      - However, this command (Claude Code) is responsible for the final BLOCKING / NON-BLOCKING judgment and report.
-   - If any **DEFERRED** non-blocking items are found, write them to `.design/non-blocking-issues.md`.
-   - Do **not** write QUICK-FIX items to `non-blocking-issues.md` — they should already be resolved.
+   - If any NON-BLOCKING items are found, write them to `.design/non-blocking-issues.md`.
    - Do not perform refactors here; only **review and gate commits**.
    - Do **not** create or update any task or refactor tracking files.
    - Keep your explanations short but precise, optimized for an experienced engineer.
