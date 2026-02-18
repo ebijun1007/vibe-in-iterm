@@ -111,6 +111,8 @@ ensure_vibe_kanban_running() {
   local port="${VIBE_KANBAN_PORT:-55233}"
   local log_path="${VIBE_KANBAN_LOG_PATH:-/tmp/vibe-kanban.log}"
   local lock_dir="/tmp/vibe-kanban-${port}.lock"
+  local wait_attempts=300
+  local wait_interval=0.2
 
   if lsof -nP -iTCP:"$port" -sTCP:LISTEN >/dev/null 2>&1; then
     echo "[info] vibe-kanban is already running on port ${port}"
@@ -127,8 +129,8 @@ ensure_vibe_kanban_running() {
     echo "[info] Starting vibe-kanban on port ${port}"
     nohup env PORT="$port" npx -y vibe-kanban@latest >"$log_path" 2>&1 &
 
-    for _ in {1..20}; do
-      sleep 0.5
+    for ((i = 1; i <= wait_attempts; i++)); do
+      sleep "$wait_interval"
       if lsof -nP -iTCP:"$port" -sTCP:LISTEN >/dev/null 2>&1; then
         rmdir "$lock_dir" >/dev/null 2>&1 || true
         echo "[info] Started vibe-kanban on port ${port} (log: ${log_path})"
@@ -142,8 +144,8 @@ ensure_vibe_kanban_running() {
   fi
 
   echo "[info] Another vc process is starting vibe-kanban. Waiting for port ${port}..."
-  for _ in {1..20}; do
-    sleep 0.5
+  for ((i = 1; i <= wait_attempts; i++)); do
+    sleep "$wait_interval"
     if lsof -nP -iTCP:"$port" -sTCP:LISTEN >/dev/null 2>&1; then
       echo "[info] vibe-kanban is now running on port ${port}"
       return 0
