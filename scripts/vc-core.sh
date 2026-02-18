@@ -239,6 +239,13 @@ ensure_vibe_kanban_running() {
     echo "[info] Wrote vibe-kanban port file: ${port_file}"
   }
 
+  # 既にヘルシーなら何もしない（他プロセスが使用中の可能性がある）
+  if curl -fsS "$health_url" >/dev/null 2>&1; then
+    write_port_file
+    echo "[info] vibe-kanban is already running on port ${port}"
+    return 0
+  fi
+
   if mkdir "$lock_dir" >/dev/null 2>&1; then
     stop_vibe_kanban_processes
 
