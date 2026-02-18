@@ -107,6 +107,55 @@ copy_overwrite_if_exists "$src_root/.codex/AGENTS.md" "$CODEX_HOME/AGENTS.md"
 
 echo "[done] Workspace prepared for: $WORKDIR"
 
+ensure_vibe_kanban_running() {
+  local port="${VIBE_KANBAN_PORT:-55233}"
+  local log_path="${VIBE_KANBAN_LOG_PATH:-/tmp/vibe-kanban.log}"
+  local lock_dir="/tmp/vibe-kanban-${port}.lock"
+
+  if lsof -nP -iTCP:"$port" -sTCP:LISTEN >/dev/null 2>&1; then
+    echo "[info] vibe-kanban is already running on port ${port}"
+    return 0
+  fi
+
+  if mkdir "$lock_dir" >/dev/null 2>&1; then
+    if lsof -nP -iTCP:"$port" -sTCP:LISTEN >/dev/null 2>&1; then
+      rmdir "$lock_dir" >/dev/null 2>&1 || true
+      echo "[info] vibe-kanban is already running on port ${port}"
+      return 0
+    fi
+
+    echo "[info] Starting vibe-kanban on port ${port}"
+    nohup env PORT="$port" npx -y vibe-kanban@latest >"$log_path" 2>&1 &
+
+    for _ in {1..20}; do
+      sleep 0.5
+      if lsof -nP -iTCP:"$port" -sTCP:LISTEN >/dev/null 2>&1; then
+        rmdir "$lock_dir" >/dev/null 2>&1 || true
+        echo "[info] Started vibe-kanban on port ${port} (log: ${log_path})"
+        return 0
+      fi
+    done
+
+    rmdir "$lock_dir" >/dev/null 2>&1 || true
+    echo "[error] Failed to start vibe-kanban on port ${port}. See log: ${log_path}" >&2
+    return 1
+  fi
+
+  echo "[info] Another vc process is starting vibe-kanban. Waiting for port ${port}..."
+  for _ in {1..20}; do
+    sleep 0.5
+    if lsof -nP -iTCP:"$port" -sTCP:LISTEN >/dev/null 2>&1; then
+      echo "[info] vibe-kanban is now running on port ${port}"
+      return 0
+    fi
+  done
+
+  echo "[error] Timed out waiting for vibe-kanban on port ${port}" >&2
+  return 1
+}
+
+ensure_vibe_kanban_running
+
 # Run AppleScript to create iTerm layout
 osascript <<EOF
 on run
