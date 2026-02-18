@@ -5,6 +5,11 @@ description: Create and update task tickets in `.design/tasks` as source-of-trut
 
 # Task Intake
 
+## MCP接続先
+
+- vibe-kanban MCP は `http://127.0.0.1:55233` を使用する（固定）。
+- 例外的に変更する場合のみ `VIBE_KANBAN_PORT` を明示設定する。
+
 ## Workflow
 
 1. Confirm whether this is a new task or an update to an existing task.

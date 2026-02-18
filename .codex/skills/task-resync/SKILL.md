@@ -10,6 +10,11 @@ description: Re-sync `.design/tasks` with vibe-kanban after pulling the current 
 `git pull` 後に `.design/tasks` と vibe-kanban の差分を解消する。
 正本は常に `.design/tasks`。
 
+## MCP接続先
+
+- vibe-kanban MCP は `http://127.0.0.1:55233` を使用する（固定）。
+- 例外的に変更する場合のみ `VIBE_KANBAN_PORT` を明示設定する。
+
 ## Workflow
 
 1. 現在ブランチを確認する（`git rev-parse --abbrev-ref HEAD`）。

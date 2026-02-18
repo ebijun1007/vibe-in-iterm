@@ -2,6 +2,11 @@
 
 この規約は `https://www.vibekanban.com/docs/integrations/vibe-kanban-mcp-server` の仕様に基づく。
 
+## 接続先ポート（固定）
+
+- 既定の接続先は `127.0.0.1:55233`。
+- 変更は `VIBE_KANBAN_PORT` を明示設定した場合のみ。
+
 ## 利用可能ツール
 
 - `list_projects`
