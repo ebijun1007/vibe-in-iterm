@@ -11,7 +11,7 @@
 - [ ] `owner` (`codex` / `claude-code`): `________________`
 - [ ] `カードID`（未作成なら空欄）: `________________`
 - [ ] `タイトル`: `________________`
-- [ ] `概要(説明)`: `________________`
+- [ ] `description 用本文`: タスクファイルからタイトル行（`# ...`）と `## vibe-kanban同期` セクションを除いた残り全文
 
 ## 1. プロジェクト特定
 
@@ -35,6 +35,7 @@
 
 実行:
 1. `create_task(project_id, title, description, status?)`
+   - `description`: タスクファイルの markdown 本文をそのまま渡す（タイトル行 `# ...` と `## vibe-kanban同期` セクションを除く）
 2. 戻り値 `id` を `.design/tasks` の `カードID` に記録
 
 記録:
@@ -50,6 +51,7 @@
 実行:
 1. `get_task(task_id)` で存在確認
 2. `update_task(task_id, title?, description?, status?)`
+   - `description`: タスクファイルの markdown 本文をそのまま渡す（タイトル行 `# ...` と `## vibe-kanban同期` セクションを除く）
 
 記録:
 - [ ] `task_id`: `________________`
@@ -105,6 +107,6 @@
 ## 5. 最終チェック
 
 - [ ] `.design/tasks` と vibe-kanban のタイトルが一致
-- [ ] `.design/tasks` と vibe-kanban の概要が一致
+- [ ] `.design/tasks` と vibe-kanban の description がタスクファイル本文と一致
 - [ ] `カードID` が `.design/tasks` に記録済み
 - [ ] `同期状態` / `最終同期` が更新済み

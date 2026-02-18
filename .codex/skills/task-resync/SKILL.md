@@ -21,16 +21,16 @@ description: Re-sync `.design/tasks` with vibe-kanban after pulling the current 
 2. 現在ブランチを pull する（`git pull --rebase`）。
 3. `.design/tasks/README.md` を読み、タスクフォーマットを確認する。
 4. `.design/tasks/*.md` を列挙し、各ファイルの次を取得する。
-   - タイトル
-   - 概要
+   - タイトル（`# ...` 行）
+   - タスクファイル本文（description 用: タイトル行と `## vibe-kanban同期` セクションを除いた残り全文）
    - owner
    - `## vibe-kanban同期` の `カードID` / `同期状態` / `最終同期`
 5. vibe-kanban の対象プロジェクトを特定する。
    - プロジェクト名は `pwd` basename と完全一致。
    - 一意に決まらない場合は推測せずユーザー確認。
 6. 各タスクを同期する（`.design/tasks` が正本）。
-   - `カードID` あり: `get_task` で存在確認し、`update_task` で同期。
-   - `カードID` なし: `create_task` で新規作成し、返却 ID をファイルへ記録。
+   - `カードID` あり: `get_task` で存在確認し、`update_task(task_id, title, description)` で同期。`description` にはステップ4で抽出したタスクファイル本文を渡す。
+   - `カードID` なし: `create_task(project_id, title, description)` で新規作成し、返却 ID をファイルへ記録。`description` にはステップ4で抽出したタスクファイル本文を渡す。
 7. 同期結果をローカルへ反映する。
    - 成功: `同期状態: synced` と `最終同期` を更新。
    - 失敗: `同期状態: error` を記録し、`備考` に失敗理由を追記。

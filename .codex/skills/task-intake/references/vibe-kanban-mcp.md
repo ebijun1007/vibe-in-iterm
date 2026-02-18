@@ -43,11 +43,22 @@
 
 ## タスク同期ルール（.design/tasks が正本）
 
+### description マッピング
+
+`description` にはタスクファイル（`.design/tasks/*.md`）の本文を渡す。
+ただし以下を **除外** する:
+- タイトル行（`# ...`）— `title` パラメータで別途渡すため
+- `## vibe-kanban同期` セクション全体 — 同期メタデータであり、カード内容ではないため
+
+それ以外のセクション（`## ステータス`, `## owner`, `## 概要`, `## 完了条件`, `## 備考` 等）はすべて `description` に含める。
+
+### 同期フロー
+
 1. `.design/tasks/*.md` に `カードID` がある場合:
    - `get_task(id)` で存在確認
-   - `update_task(id, ...)` で同期
+   - `update_task(id, title, description, ...)` で同期（`description` はタスクファイル本文）
 2. `カードID` がない場合:
-   - `create_task(project_id, title, description, status)` で作成
+   - `create_task(project_id, title, description, status)` で作成（`description` はタスクファイル本文）
    - 返却 `id` をタスクファイルへ記録
 3. 同期失敗時:
    - `.design/tasks` に `同期状態: error` を記録し、理由を報告する
