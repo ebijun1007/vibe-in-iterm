@@ -75,6 +75,35 @@ merge_tree_skip_existing() {
   done < <(cd "$src_dir" && find . -mindepth 1 -print0)
 }
 
+sync_tree_overwrite() {
+  local src_dir="$1"
+  local dest_dir="$2"
+
+  [ -d "$src_dir" ] || return 0
+  mkdir -p "$dest_dir"
+
+  while IFS= read -r -d '' rel; do
+    rel="${rel#./}"
+    [ -n "$rel" ] || continue
+    [ "$(basename "$rel")" = ".keep" ] && continue
+
+    local src_path="$src_dir/$rel"
+    local dest_path="$dest_dir/$rel"
+
+    if [ -d "$src_path" ]; then
+      mkdir -p "$dest_path"
+      continue
+    fi
+
+    mkdir -p "$(dirname "$dest_path")"
+    if [ -e "$dest_path" ] && cmp -s "$src_path" "$dest_path"; then
+      continue
+    fi
+    cp -p "$src_path" "$dest_path"
+    echo "[info] Synced: $dest_path"
+  done < <(cd "$src_dir" && find . -mindepth 1 -print0)
+}
+
 copy_overwrite_if_exists() {
   local src_file="$1"
   local dest_file="$2"
@@ -101,6 +130,10 @@ CODEX_HOME="${CODEX_HOME:-$HOME/.codex}"
 
 merge_tree_skip_existing "$src_root/.claude" "$CLAUDE_HOME"
 merge_tree_skip_existing "$src_root/.codex" "$CODEX_HOME"
+
+# Skills はリポジトリ側が正本 — 常に上書き同期
+sync_tree_overwrite "$src_root/.claude/skills" "$CLAUDE_HOME/skills"
+sync_tree_overwrite "$src_root/.codex/skills" "$CODEX_HOME/skills"
 
 copy_overwrite_if_exists "$src_root/.claude/CLAUDE.md" "$CLAUDE_HOME/CLAUDE.md"
 copy_overwrite_if_exists "$src_root/.codex/AGENTS.md" "$CODEX_HOME/AGENTS.md"
