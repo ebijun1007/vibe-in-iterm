@@ -1,0 +1,7 @@
+display_name: Vibe Kanban Auto Restart
+short_description: vibe-kanban不調時に再起動して疎通確認
+full_description: |
+  vibe-kanban と MCP のバージョン不整合が疑われるときに、
+  ローカルアプリ再起動と再疎通確認を標準化するスキル。
+default_prompt: |
+  vibe-kanbanの不調を確認して、必要なら再起動して復旧確認して。
