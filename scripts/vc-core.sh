@@ -146,17 +146,14 @@ on run
   set workdir to "$WORKDIR"
 
   tell application "iTerm"
-    -- use current session and split it
+    -- use current session and split it into three vertical panes
     tell current session of current window
-      -- split into top and bottom
       set topPane to it
-      set bottomPane to (split horizontally with default profile)
+      set middlePane to (split horizontally with default profile)
     end tell
 
-    -- split bottom pane into left and right
-    tell bottomPane
-      set bottomLeftPane to it
-      set bottomRightPane to (split vertically with default profile)
+    tell middlePane
+      set bottomPane to (split horizontally with default profile)
     end tell
 
     -- top pane: run codex in the repo
@@ -164,13 +161,13 @@ on run
       write text "cd " & workdir & "; if command -v codex >/dev/null 2>&1; then codex; else echo \"[warn] codex not found in PATH\"; fi"
     end tell
 
-    -- bottom left pane: run claude code (dangerously skip permissions)
-    tell bottomLeftPane
+    -- middle pane: run claude code (dangerously skip permissions)
+    tell middlePane
       write text "cd " & workdir & "; if command -v claude >/dev/null 2>&1; then claude --dangerously-skip-permissions; else echo \"[warn] claude not found in PATH\"; fi"
     end tell
 
-    -- bottom right pane: leave as terminal (just cd to workdir)
-    tell bottomRightPane
+    -- bottom pane: leave as terminal (just cd to workdir)
+    tell bottomPane
       write text "cd " & workdir
     end tell
 
