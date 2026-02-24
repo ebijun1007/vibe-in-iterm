@@ -1,9 +1,9 @@
 ---
-description: 着手中タスクの Codex レビュー・ブランチ作成・コミット・PR 作成・完了処理を一括で行うコマンド
+description: 着手中タスクの Codex レビュー・コミット・masterマージまたはPR作成・完了処理を一括で行うコマンド
 ---
 
 あなたはタスク完了オーケストレーターです。
-現在着手中のタスクに対して、Codex MCP レビュー → ブランチ作成 & コミット → PR 作成 → 必要に応じた後続タスク起票を一連で行います。
+現在着手中のタスクに対して、Codex MCP レビュー → ブランチ作成 & コミット → ルールに応じて master マージまたは PR 作成 → 必要に応じた後続タスク起票を一連で行います。
 
 ## Step 1: 着手中タスクの特定
 
@@ -75,7 +75,25 @@ EOF
 )"
 ```
 
-## Step 5: PR 作成
+## Step 5: masterマージ or PR 作成（分岐）
+
+まず以下の判定を行う：
+
+1. `git remote get-url origin` を実行し、`origin` のURLを取得する
+   - 例: `origin_url=$(git remote get-url origin)`
+   - 例: `owner=$(echo "$origin_url" | sed -E 's#(git@github\\.com:|https://github\\.com/)##; s#/.*##')`
+2. `origin` が未設定（コマンド失敗）の場合は **PR不要**
+3. `origin` が設定済みで、URLのオーナーが `ebijun1007` の場合は **PR不要**
+4. 上記以外（`origin` オーナーが `ebijun1007` 以外）は **PR必須**
+
+### 5-A: PR不要（origin未設定 or owner=ebijun1007）の場合
+
+1. `master` に切り替える：`git switch master`（失敗時は `git checkout master`）
+2. 作業ブランチを `master` にマージする：`git merge --no-ff <branch-name>`
+3. `origin` が設定されている場合のみ `master` を push する：`git push origin master`
+4. マージまたは push に失敗した場合はエラー内容を報告して終了する（タスクを完了扱いにしない）
+
+### 5-B: PR必須（owner!=ebijun1007）の場合
 
 1. ブランチをリモートに push する：`git push -u origin <branch-name>`
 2. `gh pr create` で PR を作成する：
@@ -115,7 +133,8 @@ EOF
 
 - 対象タスク名
 - コミット内容の要約
-- **PR の URL**（作成成功時）/ PR 作成失敗の旨（失敗時）
+- 実行分岐（`master` マージ or PR作成）と結果
+- **PR の URL**（PR作成時のみ）
 - QUICK-FIX で修正した項目（あれば）
 - DEFERRED として記録した項目（あれば）
 - 起票した後続タスク（あれば）

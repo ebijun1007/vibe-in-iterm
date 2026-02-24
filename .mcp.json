@@ -7,17 +7,6 @@
         "mcp-server"
       ],
       "env": {}
-    },
-    "vibe_kanban": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "vibe-kanban@latest",
-        "--mcp"
-      ],
-      "env": {
-        "VIBE_BACKEND_URL": "http://127.0.0.1:55233"
-      }
     }
   }
 }

@@ -1,12 +1,12 @@
 ---
 name: Close Task
-description: 着手中タスクのセルフレビュー・コミット・完了処理を一括で行うプロンプト
+description: 着手中タスクのセルフレビュー・コミット・masterマージまたはPR作成・完了処理を一括で行うプロンプト
 author: codex
 ---
 
 ## Goal
 
-現在着手中（進行中）のタスクに対して、セルフレビュー → コミット（タスク更新含む） → 必要に応じた後続タスク起票を一連で行う。
+現在着手中（進行中）のタスクに対して、セルフレビュー → コミット（タスク更新含む） → ルールに応じて master マージまたは PR 作成 → 必要に応じた後続タスク起票を一連で行う。
 
 ## Important override for this run
 
@@ -62,20 +62,43 @@ EOF
 )"
 ```
 
-6. push しない
+6. この時点ではまだ push/PR/merge は行わない（次ステップで分岐処理）
 
-### 5. 後続タスク・懸念事項
+### 5. masterマージ or PR作成（分岐）
+
+まず以下の判定を行う：
+
+1. `git remote get-url origin` を実行し、`origin` のURLを取得する
+   - 例: `origin_url=$(git remote get-url origin)`
+   - 例: `owner=$(echo "$origin_url" | sed -E 's#(git@github\\.com:|https://github\\.com/)##; s#/.*##')`
+2. `origin` が未設定（コマンド失敗）の場合は **PR不要**
+3. `origin` が設定済みで、URLのオーナーが `ebijun1007` の場合は **PR不要**
+4. 上記以外（`origin` オーナーが `ebijun1007` 以外）は **PR必須**
+
+### 5-A. PR不要（origin未設定 or owner=ebijun1007）の場合
+
+1. `master` に切り替える：`git switch master`（失敗時は `git checkout master`）
+2. 作業ブランチを `master` にマージする：`git merge --no-ff <branch-name>`
+3. `origin` が設定されている場合のみ `master` を push する：`git push origin master`
+4. マージまたは push に失敗した場合はエラー内容を報告して終了する（タスクを完了扱いにしない）
+
+### 5-B. PR必須（owner!=ebijun1007）の場合
+
+1. ブランチをリモートに push する：`git push -u origin <branch-name>`
+2. `gh pr create` で PR を作成する
+3. push または PR 作成に失敗した場合はエラー内容を報告し、コミットは保持したまま終了する
+
+### 6. 後続タスク・懸念事項
 
 - DEFERRED: `.design/non-blocking-issues.md` に追記
 - 新規タスク: **ユーザー確認の上**、`.design/tasks/YYYYMMDD-title.md` で起票（テンプレートは `.design/tasks/README.md` に準拠）
 
-### 6. 完了報告
+### 7. 完了報告
 
-- 対象タスク名、コミット要約、QUICK-FIX/DEFERRED/後続タスクの一覧を報告
+- 対象タスク名、コミット要約、実行分岐（`master` マージ or PR作成）と結果、QUICK-FIX/DEFERRED/後続タスクの一覧を報告
 
 ## Guardrails
 
-- リモートへ push しない
 - BLOCKING問題がある場合はファイル変更・コミットを行わない
 - コミット失敗時はタスクステータスを更新しない
 - 新規タスクの自動起票は禁止（必ずユーザー確認）
