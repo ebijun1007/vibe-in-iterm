@@ -60,7 +60,16 @@
    - 説明、要約、生成されるイシューは全て日本語で記述する。
 
 11. **コード実装時は `git worktree` を使用する。**
-   - タスクごとに独立した作業空間で作業し、コンフリクトを回避する。
+   - タスクごとに必ず新規の `git worktree` を作成し、既存の作業ツリーは使い回さない。
+   - 作業ブランチは「デフォルトブランチ（base branch）」から作成する。`main` / `master` を固定で決め打ちしない。
+   - base branch は次の順で自動判定する。
+     - `git fetch origin --prune`
+     - `git symbolic-ref --quiet --short refs/remotes/origin/HEAD` を実行し、`origin/main` または `origin/master` を取得する。
+     - 上記が失敗した場合のみフォールバックとして `origin/main` の存在を確認し、存在すれば `main`、存在しなければ `master` を使用する。
+   - `worktree` 作成は次の形式で行う。
+     - `git worktree add <path> -b <task-branch> origin/${BASE_BRANCH}`
+   - 着手前に `git -C <path> log --oneline origin/${BASE_BRANCH}..HEAD` を実行し、出力が空であることを確認する。
+   - 上記チェックでコミットが表示された場合は作業を停止し、branch 起点を見直す。
 
 ---
 
