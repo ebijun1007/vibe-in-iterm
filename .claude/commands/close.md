@@ -18,6 +18,25 @@ description: 着手中タスクの Codex レビュー・コミット・masterマ
 3. `git diff` は対象ファイルに絞って確認する（例: `git diff -- <file1> <file2> ...`）
 4. 対象外のファイルについて確認や言及をしない。止まらずに進める
 
+## Step 2.5: コードレビュー（3視点並列）
+
+対象ファイルに対して、review-code スキルで3エージェント並列レビューを実行する。
+
+1. 以下の3エージェントが並列でコードレビューを実施する：
+   - **QA Reviewer**: 機能正確性・エッジケース・テストカバレッジ・リグレッションリスク
+   - **Security Reviewer**: OWASP Top 10・入力検証・認証認可・機密情報露出
+   - **Code Consistency Reviewer**: 命名規則・DRY原則・設計パターン遵守
+2. 判定分岐：
+   - **PASS** → Step 3（Codex MCP レビュー）へ進む
+   - **CONDITIONAL** → WARNING 一覧を表示し、ユーザーに承認を求める。承認されたら Step 3 へ
+   - **REJECT** → BLOCKING 一覧を表示し、修正を要求する。BLOCKING が解消されるまで Step 3 に進まない
+3. **REJECT 時の再実行フロー**：
+   - BLOCKING 指摘の修正を実施する
+   - 修正後、review-code スキルを再実行する（Step 2.5 をリトライ）
+   - PASS または CONDITIONAL（ユーザー承認付き）になるまでループする
+
+**注意**: このレビューは Step 3 の Codex MCP レビューを**置き換えず補完する**（2段ゲート）。
+
 ## Step 3: Codex MCP レビュー（必須ゲート）
 
 対象ファイルの diff を Codex MCP に送信してレビューを依頼する。
@@ -161,6 +180,7 @@ EOF
 - QUICK-FIX で修正した項目（あれば）
 - DEFERRED として記録した項目（あれば）
 - 起票した後続タスク（あれば）
+- コードレビュー（3視点）の結果要約（判定と主な指摘）
 
 ## 注意事項
 
