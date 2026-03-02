@@ -26,12 +26,17 @@
 ## owner
 codex または claude-code
 
+## worktree
+- path: [例: ../wt/auth-3A]
+- branch: [例: task/auth-3A]
+
 ## 概要
 [タスクの説明]
 
 ## 完了条件
 - [ ] 条件1
 - [ ] 条件2
+- [ ] `git worktree remove <path>` で専用 worktree を削除済み
 
 ## 備考
 [必要に応じて追記]
@@ -43,8 +48,9 @@ codex または claude-code
 1. このフォルダに `YYYYMMDD-<namespace>-<優先度識別子>-title.md` 形式でファイルを作成
 2. タスクタイトル先頭に `namespace-優先度識別子` を付与する（例: `[auth-3A]`）
 3. `owner` を `codex` または `claude-code` で明記
-4. 上記テンプレートに従って内容を記述
-5. 必要に応じて外部ツールへ同内容を転記する
+4. タスク専用 `git worktree` を作成し、`worktree.path` と `worktree.branch` を記入する
+5. 上記テンプレートに従って内容を記述
+6. 必要に応じて外部ツールへ同内容を転記する
 
 ### タスクの確認
 `/tasks` コマンドでこのフォルダ内のタスクを一覧・確認できます。
