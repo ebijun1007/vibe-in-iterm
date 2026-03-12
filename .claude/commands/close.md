@@ -28,12 +28,11 @@ description: 着手中タスクの Codex レビュー・コミット・masterマ
    - **Code Consistency Reviewer**: 命名規則・DRY原則・設計パターン遵守
 2. 判定分岐：
    - **PASS** → Step 3（Codex MCP レビュー）へ進む
-   - **CONDITIONAL** → WARNING 一覧を表示し、ユーザーに承認を求める。承認されたら Step 3 へ
-   - **REJECT** → BLOCKING 一覧を表示し、修正を要求する。BLOCKING が解消されるまで Step 3 に進まない
+   - **REJECT** → 指摘一覧（WARNING・BLOCKING）を表示し、修正を要求する。解消まで Step 3 に進まない
 3. **REJECT 時の再実行フロー**：
-   - BLOCKING 指摘の修正を実施する
+   - 指摘事項の修正を実施する
    - 修正後、review-code スキルを再実行する（Step 2.5 をリトライ）
-   - PASS または CONDITIONAL（ユーザー承認付き）になるまでループする
+   - PASS になるまでループする
 
 **注意**: このレビューは Step 3 の Codex MCP レビューを**置き換えず補完する**（2段ゲート）。
 

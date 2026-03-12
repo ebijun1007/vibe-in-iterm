@@ -70,13 +70,12 @@ UI一貫性・直感性・アクセシビリティの観点から評価してく
 #### INFO
 - **[カテゴリ]**: [内容] / 補足
 
-### 判定: [PASS|CONDITIONAL|REJECT]
+### 判定: [PASS|REJECT]
 ```
 
-**重要**: `### 判定:` 行には `PASS`、`CONDITIONAL`、`REJECT` のいずれか1語のみを記載すること。他の表現や修飾語は使用しない。
+**重要**: `### 判定:` 行には `PASS`、`REJECT` のいずれか1語のみを記載すること。他の表現や修飾語は使用しない。
 
 ## 判定基準
 
 - **PASS**: 指摘事項なし、またはINFOのみ
-- **CONDITIONAL**: WARNING あり（修正推奨だが着手可能）
-- **REJECT**: BLOCKING あり（修正必須、着手不可）
+- **REJECT**: WARNING または BLOCKING あり（修正必須）

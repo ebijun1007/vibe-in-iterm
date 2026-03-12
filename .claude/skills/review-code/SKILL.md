@@ -50,7 +50,7 @@ Agent ツールで以下の3エージェントを**並列**に起動する。各
 ```markdown
 # コードレビュー結果（統合）
 
-## 総合判定: [PASS / CONDITIONAL / REJECT]
+## 総合判定: [PASS / REJECT]
 
 [判定理由を1-2行で]
 
@@ -73,14 +73,12 @@ Agent ツールで以下の3エージェントを**並列**に起動する。各
 ### 4. 総合判定ロジック
 
 - 1つでも **REJECT** → 総合 **REJECT**
-- REJECT なし + **CONDITIONAL** あり → 総合 **CONDITIONAL**
 - 全 **PASS** → 総合 **PASS**
 
 ### 5. 後続処理との連携
 
 このスキルの結果は `/close` の Step 2.5 で使用される：
 - **PASS** → Step 3（Codex MCP レビュー）へ進む
-- **CONDITIONAL** → WARNING を表示し、ユーザー承認で Step 3 へ
-- **REJECT** → BLOCKING を表示し、修正を要求。解消まで Step 3 に進まない
+- **REJECT** → 指摘を表示し、修正を要求。解消まで Step 3 に進まない
 
 Codex MCP レビュー（Step 3）はこのレビューとは独立して実施される（2段ゲート）。

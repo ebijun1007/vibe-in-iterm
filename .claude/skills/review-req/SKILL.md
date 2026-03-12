@@ -49,7 +49,7 @@ Agent ツールで以下の3エージェントを**並列**に起動する。各
 ```markdown
 # 要件レビュー結果（統合）
 
-## 総合判定: [PASS / CONDITIONAL / REJECT]
+## 総合判定: [PASS / REJECT]
 
 [判定理由を1-2行で]
 
@@ -72,5 +72,4 @@ Agent ツールで以下の3エージェントを**並列**に起動する。各
 ### 4. 総合判定ロジック
 
 - 1つでも **REJECT** → 総合 **REJECT**
-- REJECT なし + **CONDITIONAL** あり → 総合 **CONDITIONAL**
 - 全 **PASS** → 総合 **PASS**
