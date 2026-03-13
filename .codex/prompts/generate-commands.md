@@ -72,7 +72,7 @@ The command body should generally include:
 As a pattern, prefer structures like:
 
 - “You are a dedicated ◯◯ command for this repository.”
-- "Scope: this repository's `.design/` directory and `.design/tasks/`." (as needed)
+- “Scope: this repository’s `.design/` directory and `.design/todo.md`.” (as needed)
 - “What to do: read the specified files, summarize, compute diffs, and convert into tasks.”
 - “What NOT to do: do not auto-fix code, do not directly edit design documents, etc.”
 
